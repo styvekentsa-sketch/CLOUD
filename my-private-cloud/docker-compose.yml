@@ -261,6 +261,10 @@ services:
       - ./config/branding:/opt/branding:ro
       # Widget "Comptes S-Drive" du tableau de bord (apps/sdrive_users)
       - ./apps/sdrive_users:/var/www/html/custom_apps/sdrive_users:ro
+      # Pages "Vidéos" et "Audio" du menu (apps/sdrive_media)
+      - ./apps/sdrive_media:/var/www/html/custom_apps/sdrive_media:ro
+      # Icônes S-Drive du menu (config "theme" => "sdrive", cf. branding.sh)
+      - ./config/branding/theme:/var/www/html/themes/sdrive:ro
     ports:
       # LOCAL : 0.0.0.0 -> http://localhost:8080 ET http://<IP-LAN>:8080
       # VPS   : 127.0.0.1 -> seul le proxy (NPM / Cloudflare) est public

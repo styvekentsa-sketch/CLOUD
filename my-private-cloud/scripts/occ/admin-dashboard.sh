@@ -18,7 +18,7 @@ app_on() {
 }
 
 echo "==> [admin] Applications de suivi"
-for a in dashboard activity serverinfo admin_audit logreader user_status sdrive_users; do app_on "$a"; done
+for a in dashboard activity serverinfo admin_audit logreader user_status sdrive_users sdrive_media; do app_on "$a"; done
 
 echo "==> [admin] Journal d'audit -> journal principal (visible dans l'interface)"
 DATADIR="$(occ config:system:get datadirectory)"

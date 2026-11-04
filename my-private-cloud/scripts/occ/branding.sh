@@ -45,6 +45,8 @@ fi
 occ config:system:set default_language --value="${BRAND_LANGUAGE:-fr}" >/dev/null
 occ config:system:set default_locale --value="${BRAND_LOCALE:-fr_FR}" >/dev/null
 occ config:system:set skeletondirectory --value="" >/dev/null
+# Icônes du menu (themes/sdrive, monté depuis config/branding/theme)
+[ -d /var/www/html/themes/sdrive ] && occ config:system:set theme --value=sdrive >/dev/null
 echo "    Langue ${BRAND_LANGUAGE:-fr}, nouveaux comptes sans fichiers d'exemple"
 
 occ maintenance:theme:update >/dev/null 2>&1 || true

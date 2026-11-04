@@ -1,0 +1,163 @@
+/* S-Drive Média — pages Vidéos / Audio. Couleurs : variables du thème Nextcloud
+   (clair ou sombre automatiquement). Sobre : pas de dégradé, pas d'effet. */
+
+.sdm {
+	padding: 24px 32px 48px;
+	box-sizing: border-box;
+	overflow-y: auto;
+	height: 100%;
+}
+
+.sdm-head {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin: 8px 0 24px 44px; /* laisse la place au bouton de menu à gauche */
+	padding-bottom: 16px;
+	border-bottom: 1px solid var(--color-border);
+}
+.sdm-title {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 600;
+	color: var(--color-main-text);
+}
+.sdm-meta {
+	margin: 4px 0 0;
+	color: var(--color-text-maxcontrast);
+}
+.sdm-search input {
+	width: 260px;
+	max-width: 100%;
+	margin: 0;
+}
+
+/* --- Vidéos : grille de vignettes -------------------------------------------- */
+.sdm-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 20px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.sdm-card {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	color: var(--color-main-text);
+	text-decoration: none;
+}
+.sdm-thumb {
+	position: relative;
+	display: block;
+	aspect-ratio: 16 / 9;
+	margin-bottom: 8px;
+	border-radius: var(--border-radius-large, 8px);
+	border: 1px solid var(--color-border);
+	background-color: var(--color-background-dark);
+	background-size: cover;
+	background-position: center;
+	overflow: hidden;
+}
+.sdm-play {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.6);
+}
+.sdm-play::after {
+	content: "";
+	position: absolute;
+	left: 12px;
+	top: 9px;
+	border-style: solid;
+	border-width: 7px 0 7px 11px;
+	border-color: transparent transparent transparent #fff;
+}
+.sdm-card:hover .sdm-thumb,
+.sdm-card:focus-visible .sdm-thumb {
+	border-color: var(--color-primary-element);
+}
+.sdm-name {
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.sdm-sub {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* --- Audio : liste ------------------------------------------------------------ */
+.sdm-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.sdm-table th {
+	text-align: start;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--color-border);
+}
+.sdm-table td {
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--color-border);
+	max-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.sdm-table td:first-child { width: 55%; }
+.sdm-table tr:hover td { background: var(--color-background-hover); }
+.sdm-table .num { text-align: end; width: 110px; }
+.sdm-dim { color: var(--color-text-maxcontrast); }
+.sdm-track {
+	display: inline-flex;
+	align-items: center;
+	gap: 12px;
+	color: var(--color-main-text);
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.sdm-note {
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	background-color: var(--color-primary-element);
+	-webkit-mask: url("../img/audio.svg") center / contain no-repeat;
+	mask: url("../img/audio.svg") center / contain no-repeat;
+}
+
+/* --- État vide ---------------------------------------------------------------- */
+.sdm-empty {
+	margin: 80px auto;
+	max-width: 420px;
+	text-align: center;
+	color: var(--color-text-maxcontrast);
+}
+.sdm-empty img {
+	width: 48px;
+	height: 48px;
+	opacity: 0.5;
+	filter: var(--background-invert-if-dark);
+}
+.sdm-empty p { margin: 12px 0 0; }
+.sdm-empty .sdm-hint a { color: var(--color-primary-element); text-decoration: underline; }
+
+@media (max-width: 600px) {
+	.sdm { padding: 16px; }
+	.sdm-head { margin-left: 44px; }
+	.sdm-table th:nth-child(2), .sdm-table td:nth-child(2) { display: none; }
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>sdrive_media</id>
+	<name>S-Drive Média</name>
+	<summary>Pages Vidéos et Audio : tous vos fichiers multimédias au même endroit</summary>
+	<description>Ajoute « Vidéos » et « Audio » au menu : liste de tous les fichiers vidéo ou audio du compte, lecture dans le lecteur intégré.</description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author>S-Drive</author>
+	<namespace>SDriveMedia</namespace>
+	<category>multimedia</category>
+	<dependencies>
+		<nextcloud min-version="30" max-version="33"/>
+	</dependencies>
+	<navigations>
+		<navigation>
+			<id>sdrive_video</id>
+			<name>Vidéos</name>
+			<route>sdrive_media.page.video</route>
+			<icon>video.svg</icon>
+			<order>4</order>
+		</navigation>
+		<navigation>
+			<id>sdrive_audio</id>
+			<name>Audio</name>
+			<route>sdrive_media.page.audio</route>
+			<icon>audio.svg</icon>
+			<order>5</order>
+		</navigation>
+	</navigations>
+</info>
