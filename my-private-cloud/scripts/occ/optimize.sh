@@ -33,6 +33,7 @@ echo "==> [optimize] Aperçus : Preview Generator, 2048x2048 max, formats"
 sh /opt/scripts/previews.sh
 
 # Groupes AVANT la sécurité (la 2FA obligatoire cible des groupes existants)
+sh /opt/scripts/branding.sh
 sh /opt/scripts/groups.sh
 sh /opt/scripts/security.sh
 sh /opt/scripts/admin-dashboard.sh

@@ -54,6 +54,10 @@ x-nextcloud-common: &nextcloud-common
     PHP_UPLOAD_LIMIT: ${PHP_UPLOAD_LIMIT:-16G}
     APACHE_BODY_LIMIT: ${APACHE_BODY_LIMIT:-0}   # 0 = illimité côté Apache
     DEFAULT_PHONE_REGION: ${DEFAULT_PHONE_REGION:-FR}
+    # --- Identité visuelle (scripts/occ/branding.sh) -------------------------
+    BRAND_NAME: ${BRAND_NAME:-S-Drive}
+    BRAND_SLOGAN: ${BRAND_SLOGAN:-Votre cloud privé et sécurisé}
+    BRAND_COLOR: ${BRAND_COLOR:-#4338CA}
     # --- Purge des sauvegardes d'apps datées (WhatsApp msgstore-AAAA-MM-JJ…) --
     APP_BACKUP_CLEANUP_DIRS: ${APP_BACKUP_CLEANUP_DIRS:-Sauvegardes/WhatsApp/Databases}
     APP_BACKUP_RETENTION_DAYS: ${APP_BACKUP_RETENTION_DAYS:-14}
