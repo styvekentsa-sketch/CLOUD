@@ -7,6 +7,9 @@ set -eu
 
 occ() { php /var/www/html/occ "$@"; }
 
+# Fichiers config/*.config.php de l'image (Redis, SMTP, proxy…) s'ils manquent
+sh /opt/scripts/default-configs.sh
+
 if occ status --output=json 2>/dev/null | grep -q '"installed":true'; then
   sh /opt/scripts/trusted-domains.sh
 

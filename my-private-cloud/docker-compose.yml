@@ -103,11 +103,17 @@ services:
     network_mode: none
     volumes:
       - ${NEXTCLOUD_DATA_DIR:-./cloud_data}:/data
+      # Crée config/ (propriétaire www-data) AVANT que Docker n'y monte les
+      # fichiers en lecture seule — sinon le dossier appartient à root et
+      # Nextcloud ne peut pas écrire config.php ("Cannot write into config").
+      - nextcloud_html:/html
     command:
       - sh
       - -c
       - |
         set -e
+        mkdir -p /html/config
+        chown 33:33 /html /html/config
         if [ ! -f /data/.perms-initialized ]; then
           echo "[init-perms] chown -R 33:33 sur le dossier de données..."
           chown -R 33:33 /data || echo "[init-perms] chown ignoré (système de fichiers Windows/macOS)"
@@ -242,6 +248,7 @@ services:
       # Types MIME personnalisés (.crypt14, .db, .bak, .tar.gz…)
       - ./config/nextcloud/mimetypemapping.json:/var/www/html/config/mimetypemapping.json:ro
       - ./config/nextcloud/mimetypealiases.json:/var/www/html/config/mimetypealiases.json:ro
+      - ./scripts/hooks/pre-installation:/docker-entrypoint-hooks.d/pre-installation:ro
       - ./scripts/hooks/post-installation:/docker-entrypoint-hooks.d/post-installation:ro
       - ./scripts/hooks/before-starting:/docker-entrypoint-hooks.d/before-starting:ro
       - ./scripts/occ:/opt/scripts:ro
