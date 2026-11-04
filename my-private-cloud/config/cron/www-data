@@ -1,0 +1,12 @@
+# Crontab de l'utilisateur www-data (conteneur "cron", busybox crond)
+# Les tâches tournent ICI, jamais pendant les requêtes web (mode "Cron" de Nextcloud).
+# min heure jour mois jour-semaine  commande
+*/5 * * * * php -f /var/www/html/cron.php
+# Alertes de sécurité par e-mail (connexions, intrusions, comptes, stockage)
+*/5 * * * * flock -n /tmp/security-alerts.lock php /opt/scripts/notify.php alerts
+# Vignettes des nouveaux fichiers (Preview Generator), sans chevauchement
+*/10 * * * * sh /opt/scripts/preview-pregenerate.sh
+# Rapport de stockage par compte/groupe -> fichiers de l'admin (/Administration)
+0 6 * * * php /opt/scripts/storage-report.php --write >/dev/null
+# Purge des sauvegardes WhatsApp datées, après la sauvegarde de 2h et l'envoi
+30 5 * * * sh /opt/scripts/cleanup-app-backups.sh

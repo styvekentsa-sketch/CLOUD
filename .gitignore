@@ -1,0 +1,11 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# User data, backups, local logs
+cloud_data/
+data/
+backups/
+maintenance/logs/
+*.log

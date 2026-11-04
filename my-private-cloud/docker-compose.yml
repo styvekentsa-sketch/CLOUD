@@ -1,0 +1,362 @@
+# =============================================================================
+#  my-private-cloud — Nextcloud + PostgreSQL + Redis (+ NPM | Cloudflare Tunnel)
+# =============================================================================
+#  Le même fichier sert en LOCAL et sur VPS : seul le .env change (CLOUD_MODE).
+#
+#  LOCAL (PC actuel, HTTP, accès http://localhost:8080 + IP du réseau local) :
+#      docker compose up -d
+#  VPS avec Nginx Proxy Manager (HTTPS Let's Encrypt) :
+#      docker compose --profile npm up -d
+#  VPS avec Cloudflare Tunnel (HTTPS sans port ouvert) :
+#      docker compose --profile cloudflare up -d
+# =============================================================================
+
+name: my-private-cloud
+
+x-nextcloud-common: &nextcloud-common
+  # Image officielle + ffmpeg/ImageMagick (vignettes vidéo, HEIC) — docker/nextcloud/Dockerfile
+  image: my-private-cloud/nextcloud:${NEXTCLOUD_IMAGE_TAG:-32-apache}
+  build:
+    context: ./docker/nextcloud
+    args:
+      NEXTCLOUD_IMAGE_TAG: ${NEXTCLOUD_IMAGE_TAG:-32-apache}
+  pull_policy: build
+  restart: unless-stopped
+  environment:
+    TZ: ${TZ:-Europe/Paris}
+    # --- Base de données -----------------------------------------------------
+    POSTGRES_HOST: db
+    POSTGRES_DB: ${POSTGRES_DB:-nextcloud}
+    POSTGRES_USER: ${POSTGRES_USER:-nextcloud}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+    # --- Redis : cache distribué + VERROUILLAGE TRANSACTIONNEL des fichiers ---
+    #     (l'image génère redis.config.php -> memcache.locking = Redis)
+    REDIS_HOST: redis
+    REDIS_HOST_PORT: 6379
+    REDIS_HOST_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD manquant dans .env}
+    # --- Installation automatique au premier démarrage ----------------------
+    NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER:-admin}
+    NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD:?NEXTCLOUD_ADMIN_PASSWORD manquant dans .env}
+    # Réécrits dans config.php à CHAQUE démarrage (scripts/occ/trusted-domains.sh)
+    NEXTCLOUD_TRUSTED_DOMAINS: ${NEXTCLOUD_TRUSTED_DOMAINS:-localhost 127.0.0.1}
+    # true = toutes les IP privées du réseau local acceptées (192.168.*, 10.*, 172.16-31.*)
+    NEXTCLOUD_TRUSTED_LAN: ${NEXTCLOUD_TRUSTED_LAN:-false}
+    # --- Mode local (vide = HTTP accepté) / VPS (https + domaine) -----------
+    OVERWRITEPROTOCOL: ${OVERWRITE_PROTOCOL:-}
+    OVERWRITEHOST: ${OVERWRITE_HOST:-}
+    OVERWRITECLIURL: ${NEXTCLOUD_URL:-http://localhost:8080}
+    TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.30.0.0/24}
+    APACHE_DISABLE_REWRITE_IP: 1
+    # --- PHP : gros fichiers / mémoire (écrit dans nextcloud.ini du conteneur)
+    #     memory_limit = PHP_MEMORY_LIMIT
+    #     upload_max_filesize = post_max_size = PHP_UPLOAD_LIMIT
+    PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-2147483648}
+    PHP_UPLOAD_LIMIT: ${PHP_UPLOAD_LIMIT:-16G}
+    APACHE_BODY_LIMIT: ${APACHE_BODY_LIMIT:-0}   # 0 = illimité côté Apache
+    DEFAULT_PHONE_REGION: ${DEFAULT_PHONE_REGION:-FR}
+    # --- Purge des sauvegardes d'apps datées (WhatsApp msgstore-AAAA-MM-JJ…) --
+    APP_BACKUP_CLEANUP_DIRS: ${APP_BACKUP_CLEANUP_DIRS:-Sauvegardes/WhatsApp/Databases}
+    APP_BACKUP_RETENTION_DAYS: ${APP_BACKUP_RETENTION_DAYS:-14}
+    APP_BACKUP_DRY_RUN: ${APP_BACKUP_DRY_RUN:-false}
+    # --- Comptes, groupes & sécurité (appliqué par scripts/occ/security.sh) ----
+    USER_GROUPS: ${USER_GROUPS:-Entreprises Clients Equipe}
+    SECURITY_ALLOW_PUBLIC_LINKS: ${SECURITY_ALLOW_PUBLIC_LINKS:-false}
+    SECURITY_2FA_ENFORCED_GROUPS: ${SECURITY_2FA_ENFORCED_GROUPS:-admin Entreprises Equipe}
+    PASSWORD_MIN_LENGTH: ${PASSWORD_MIN_LENGTH:-12}
+    DEFAULT_QUOTA: ${DEFAULT_QUOTA:-none}
+    # --- E-mail (SMTP) : lu par l'image à chaque requête (config/smtp.config.php)
+    #     -> le mot de passe n'est jamais écrit dans config.php
+    SMTP_HOST: ${SMTP_HOST:-}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_SECURE: ${SMTP_SECURE:-tls}
+    SMTP_AUTHTYPE: ${SMTP_AUTHTYPE:-LOGIN}
+    SMTP_NAME: ${SMTP_NAME:-}
+    SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-}
+    MAIL_DOMAIN: ${MAIL_DOMAIN:-}
+    # --- Alertes de sécurité centralisées (scripts/occ/notify.php) -------------
+    ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+    ALERT_EMAIL: ${ALERT_EMAIL:-}
+    ALERT_NEW_LOGIN: ${ALERT_NEW_LOGIN:-true}
+    ALERT_FAILED_LOGIN_THRESHOLD: ${ALERT_FAILED_LOGIN_THRESHOLD:-5}
+    ALERT_FAILED_LOGIN_WINDOW: ${ALERT_FAILED_LOGIN_WINDOW:-900}
+    ALERT_ACCOUNT_CHANGES: ${ALERT_ACCOUNT_CHANGES:-true}
+    ALERT_STORAGE_PERCENT: ${ALERT_STORAGE_PERCENT:-90}
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    init-perms:
+      condition: service_completed_successfully
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  # ---------------------------------------------------------------------------
+  # Préparation du dossier de données local (propriétaire www-data = UID 33)
+  # S'exécute puis s'arrête ; ne refait le chown récursif qu'une seule fois.
+  # ---------------------------------------------------------------------------
+  init-perms:
+    image: alpine:${ALPINE_IMAGE_TAG:-3.20}
+    restart: "no"
+    network_mode: none
+    volumes:
+      - ${NEXTCLOUD_DATA_DIR:-./cloud_data}:/data
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        if [ ! -f /data/.perms-initialized ]; then
+          echo "[init-perms] chown -R 33:33 sur le dossier de données..."
+          chown -R 33:33 /data || echo "[init-perms] chown ignoré (système de fichiers Windows/macOS)"
+          touch /data/.perms-initialized
+        fi
+        chown 33:33 /data 2>/dev/null || true
+        chmod 0770 /data 2>/dev/null || true
+        echo "[init-perms] OK"
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — base de données (réseau interne uniquement, jamais exposée)
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:${POSTGRES_IMAGE_TAG:-17-alpine}
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+      POSTGRES_DB: ${POSTGRES_DB:-nextcloud}
+      POSTGRES_USER: ${POSTGRES_USER:-nextcloud}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Tuning (mémoire ajustable via .env — voir le tableau de dimensionnement du README)
+    #  shared_buffers       ~25 % de la RAM allouée à Docker : cache des pages chaudes
+    #  effective_cache_size ~50-75 % : indique au planificateur le cache disque de l'OS
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-512MB}
+      - -c
+      - effective_cache_size=${PG_EFFECTIVE_CACHE_SIZE:-1536MB}
+      - -c
+      - work_mem=${PG_WORK_MEM:-16MB}
+      - -c
+      - maintenance_work_mem=${PG_MAINTENANCE_WORK_MEM:-128MB}
+      - -c
+      - max_connections=100
+      # --- SSD / NVMe ---
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
+      # --- Écritures : checkpoints étalés, WAL compressé ---
+      - -c
+      - wal_compression=on
+      - -c
+      - wal_buffers=16MB
+      - -c
+      - min_wal_size=256MB
+      - -c
+      - max_wal_size=2GB
+      - -c
+      - checkpoint_completion_target=0.9
+      # --- Parallélisme (requêtes de recherche / partages) ---
+      - -c
+      - max_worker_processes=${PG_MAX_WORKERS:-4}
+      - -c
+      - max_parallel_workers=${PG_MAX_WORKERS:-4}
+      - -c
+      - max_parallel_workers_per_gather=2
+      # --- Statistiques & autovacuum (table oc_filecache très active) ---
+      - -c
+      - default_statistics_target=100
+      - -c
+      - autovacuum_vacuum_scale_factor=0.05
+      - -c
+      - autovacuum_analyze_scale_factor=0.02
+      - -c
+      - track_io_timing=on
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    shm_size: ${PG_SHM_SIZE:-512mb}   # mémoire partagée (requêtes parallèles)
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # Redis — 100 % en mémoire (aucune écriture disque) :
+  #   - memcache.distributed : cache partagé entre web et cron
+  #   - memcache.locking     : verrouillage transactionnel des fichiers
+  #   - sessions PHP         : session.save_handler=redis (écrit automatiquement
+  #                            par l'image Nextcloud quand REDIS_HOST est défini)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:${REDIS_IMAGE_TAG:-7-alpine}
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD manquant dans .env}
+    command:
+      - sh
+      - -c
+      - >-
+        exec redis-server
+        --requirepass "$${REDIS_PASSWORD}"
+        --maxmemory ${REDIS_MAXMEMORY:-512mb}
+        --maxmemory-policy allkeys-lru
+        --save ""
+        --appendonly no
+        --tcp-keepalive 60
+        --lazyfree-lazy-eviction yes
+        --lazyfree-lazy-expire yes
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # Nextcloud (Apache + mod_php)
+  # ---------------------------------------------------------------------------
+  app:
+    <<: *nextcloud-common
+    volumes:
+      - nextcloud_html:/var/www/html
+      # Fichiers utilisateurs -> dossier du disque local (stockage "illimité")
+      - ${NEXTCLOUD_DATA_DIR:-./cloud_data}:/var/www/html/data
+      - ./config/php/zz-performance.ini:/usr/local/etc/php/conf.d/zz-performance.ini:ro
+      # Apache : compression Brotli/Gzip + timeouts adaptés aux mobiles
+      - ./config/apache/zz-nextcloud-network.conf:/etc/apache2/conf-enabled/zz-nextcloud-network.conf:ro
+      # Réglages propres au mode (local.config.php / vps.config.php)
+      - ./config/nextcloud/${CLOUD_MODE:-local}.config.php:/var/www/html/config/zz-mode.config.php:ro
+      # Types MIME personnalisés (.crypt14, .db, .bak, .tar.gz…)
+      - ./config/nextcloud/mimetypemapping.json:/var/www/html/config/mimetypemapping.json:ro
+      - ./config/nextcloud/mimetypealiases.json:/var/www/html/config/mimetypealiases.json:ro
+      - ./scripts/hooks/post-installation:/docker-entrypoint-hooks.d/post-installation:ro
+      - ./scripts/hooks/before-starting:/docker-entrypoint-hooks.d/before-starting:ro
+      - ./scripts/occ:/opt/scripts:ro
+    ports:
+      # LOCAL : 0.0.0.0 -> http://localhost:8080 ET http://<IP-LAN>:8080
+      # VPS   : 127.0.0.1 -> seul le proxy (NPM / Cloudflare) est public
+      - "${APP_BIND:-0.0.0.0}:${APP_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/status.php | grep -q '\"installed\":true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+    networks:
+      - backend
+      - frontend
+
+  # ---------------------------------------------------------------------------
+  # Cron — exécute cron.php toutes les 5 minutes (tâches de fond Nextcloud)
+  # ---------------------------------------------------------------------------
+  cron:
+    <<: *nextcloud-common
+    entrypoint: /cron.sh
+    volumes:
+      - nextcloud_html:/var/www/html
+      - ${NEXTCLOUD_DATA_DIR:-./cloud_data}:/var/www/html/data
+      - ./config/php/zz-performance.ini:/usr/local/etc/php/conf.d/zz-performance.ini:ro
+      - ./config/nextcloud/${CLOUD_MODE:-local}.config.php:/var/www/html/config/zz-mode.config.php:ro
+      - ./config/nextcloud/mimetypemapping.json:/var/www/html/config/mimetypemapping.json:ro
+      - ./config/nextcloud/mimetypealiases.json:/var/www/html/config/mimetypealiases.json:ro
+      # Crontab : cron.php toutes les 5 min + purge des sauvegardes d'apps (5h30)
+      - ./config/cron/www-data:/var/spool/cron/crontabs/www-data:ro
+      - ./scripts/occ:/opt/scripts:ro
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      - backend
+
+  # ---------------------------------------------------------------------------
+  # [VPS] OPTION A — Nginx Proxy Manager (profil "npm")
+  #   Interface d'admin : http://127.0.0.1:81 (tunnel SSH sur VPS)
+  # ---------------------------------------------------------------------------
+  npm:
+    image: jc21/nginx-proxy-manager:${NPM_IMAGE_TAG:-2}
+    profiles: ["npm"]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "${NPM_ADMIN_BIND:-127.0.0.1}:81:81"
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+      DISABLE_IPV6: "false"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # [VPS] OPTION B — Cloudflare Tunnel (profil "cloudflare")
+  # ---------------------------------------------------------------------------
+  cloudflared:
+    image: cloudflare/cloudflared:${CLOUDFLARED_IMAGE_TAG:-latest}
+    profiles: ["cloudflare"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - app
+    networks:
+      - frontend
+    security_opt:
+      - no-new-privileges:true
+
+  # ---------------------------------------------------------------------------
+  # OPTION — Tableau de bord système & Docker en temps réel (profil "monitoring")
+  #   http://localhost:61208 : CPU, RAM, disques, réseau, état de chaque conteneur
+  #   ⚠ Accès en LECTURE au socket Docker : ne JAMAIS exposer ce port sur Internet
+  #     (127.0.0.1 par défaut ; sur VPS, passer par un tunnel SSH).
+  # ---------------------------------------------------------------------------
+  glances:
+    image: nicolargo/glances:${GLANCES_IMAGE_TAG:-latest-full}
+    profiles: ["monitoring"]
+    restart: unless-stopped
+    pid: host
+    environment:
+      TZ: ${TZ:-Europe/Paris}
+      GLANCES_OPT: "-w"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "${MONITORING_BIND:-127.0.0.1}:${MONITORING_PORT:-61208}:61208"
+    security_opt:
+      - no-new-privileges:true
+
+# =============================================================================
+networks:
+  # Réseau public (proxy <-> Nextcloud). Sous-réseau fixe = TRUSTED_PROXIES.
+  frontend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${FRONTEND_SUBNET:-172.30.0.0/24}
+  # Réseau privé (Nextcloud <-> PostgreSQL / Redis). Pas d'accès Internet.
+  backend:
+    driver: bridge
+    internal: true
+
+volumes:
+  nextcloud_html:
+  postgres_data:
+  npm_data:
+  npm_letsencrypt:

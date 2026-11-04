@@ -1,0 +1,15 @@
+{
+  "_comment": "Types MIME personnalisés (fusionnés avec ceux de Nextcloud). Appliquer : occ maintenance:mimetype:update-db --repair-filecache",
+  "crypt12": ["application/vnd.whatsapp.backup"],
+  "crypt14": ["application/vnd.whatsapp.backup"],
+  "crypt15": ["application/vnd.whatsapp.backup"],
+  "db": ["application/vnd.sqlite3"],
+  "sqlite": ["application/vnd.sqlite3"],
+  "sqlite3": ["application/vnd.sqlite3"],
+  "bak": ["application/x-backup"],
+  "backup": ["application/x-backup"],
+  "tar": ["application/x-tar"],
+  "tgz": ["application/gzip"],
+  "gz": ["application/gzip"],
+  "zst": ["application/zstd"]
+}

@@ -1,0 +1,7 @@
+{
+  "_comment": "Icône affichée pour les types MIME personnalisés. Appliquer : occ maintenance:mimetype:update-js",
+  "application/vnd.whatsapp.backup": "package/x-generic",
+  "application/vnd.sqlite3": "package/x-generic",
+  "application/x-backup": "package/x-generic",
+  "application/zstd": "package/x-generic"
+}

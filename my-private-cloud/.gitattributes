@@ -1,0 +1,6 @@
+# Les scripts sont exécutés dans des conteneurs Linux : toujours LF
+*.sh   text eol=lf
+*.ini  text eol=lf
+*.conf text eol=lf
+*.yml  text eol=lf
+.env*  text eol=lf
