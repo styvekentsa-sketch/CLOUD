@@ -9,13 +9,13 @@ assets=/opt/branding
 
 name=${BRAND_NAME:-S-Drive}
 slogan=${BRAND_SLOGAN:-Votre cloud privé et sécurisé}
-color=${BRAND_COLOR:-#4338CA}
+color=${BRAND_COLOR:-#0B5563}
 
 echo "==> [branding] $name — couleur $color"
 occ theming:config name "$name" >/dev/null
 occ theming:config slogan "$slogan" >/dev/null
 occ theming:config primary_color "$color" >/dev/null
-occ theming:config background_color "#1E1B4B" >/dev/null
+occ theming:config background_color "${BRAND_BACKGROUND:-#0A3F48}" >/dev/null
 [ -z "${OVERWRITECLIURL:-}" ] || occ theming:config url "$OVERWRITECLIURL" >/dev/null
 
 # Images (seulement si présentes dans config/branding/)
@@ -25,6 +25,8 @@ for key in logo logoheader favicon background; do
     occ theming:config "$key" "$f" >/dev/null && echo "    $key : $key.svg"
   fi
 done
+# Pas d'image de fond fournie -> fond uni (BRAND_BACKGROUND)
+[ -f "$assets/background.svg" ] || occ theming:config background backgroundColor >/dev/null
 
 # CSS personnalisé (app theming_customcss, installée si besoin)
 if [ -f "$assets/custom.css" ]; then

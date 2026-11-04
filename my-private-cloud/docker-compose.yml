@@ -57,7 +57,8 @@ x-nextcloud-common: &nextcloud-common
     # --- Identité visuelle (scripts/occ/branding.sh) -------------------------
     BRAND_NAME: ${BRAND_NAME:-S-Drive}
     BRAND_SLOGAN: ${BRAND_SLOGAN:-Votre cloud privé et sécurisé}
-    BRAND_COLOR: ${BRAND_COLOR:-#4338CA}
+    BRAND_COLOR: ${BRAND_COLOR:-#0B5563}
+    BRAND_BACKGROUND: ${BRAND_BACKGROUND:-#0A3F48}
     # --- Purge des sauvegardes d'apps datées (WhatsApp msgstore-AAAA-MM-JJ…) --
     APP_BACKUP_CLEANUP_DIRS: ${APP_BACKUP_CLEANUP_DIRS:-Sauvegardes/WhatsApp/Databases}
     APP_BACKUP_RETENTION_DAYS: ${APP_BACKUP_RETENTION_DAYS:-14}

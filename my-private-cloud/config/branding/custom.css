@@ -1,96 +1,49 @@
 /* =============================================================================
-   S-Drive — habillage de l'interface Nextcloud (app "Custom CSS")
-   Appliqué par scripts/occ/branding.sh. Uniquement de la mise en forme :
-   aucune fonction de Nextcloud n'est masquée ou modifiée.
+   S-Drive — habillage sobre de l'interface Nextcloud (app "Custom CSS")
+   Principes : couleurs pleines, pas de dégradé, pas de flou, pas d'effet.
+   Uniquement de la mise en forme : aucune fonction n'est masquée ou modifiée.
+   Appliqué par scripts/occ/branding.sh.
    ============================================================================= */
 
-/* --- Formes plus douces ---------------------------------------------------- */
+/* --- Formes : angles plus nets que l'original ------------------------------ */
 :root {
-	--border-radius-large: 12px;
-	--border-radius-container: 14px;
-	--border-radius-container-large: 18px;
+	--border-radius-large: 8px;
+	--border-radius-container: 8px;
+	--border-radius-container-large: 10px;
 }
 
-/* --- Barre du haut : verre dépoli indigo ---------------------------------- */
+/* --- Barre du haut : couleur pleine, filet fin ----------------------------- */
 #header:not(.header-guest) {
-	background: linear-gradient(90deg, rgba(15, 18, 52, 0.82) 0%, rgba(49, 46, 129, 0.78) 55%, rgba(67, 56, 202, 0.72) 100%);
-	backdrop-filter: blur(14px) saturate(140%);
-	-webkit-backdrop-filter: blur(14px) saturate(140%);
-	border-bottom: 1px solid rgba(165, 180, 252, 0.16);
-	box-shadow: 0 4px 24px rgba(8, 10, 40, 0.25);
+	background-color: #0A3F48;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Logo S-Drive (icône + nom) : plus large que le logo carré d'origine */
+/* Logo S-Drive (pictogramme + nom) : plus large que le logo carré d'origine */
 #header #nextcloud {
-	padding-inline-start: 148px;
+	padding-inline-start: 128px;
 }
 #header #nextcloud .logo {
-	width: 124px;
+	width: 104px;
 	inset-inline-start: 14px;
 	background-position: left center;
 	filter: none;
 }
 
-/* Icônes d'applications : pastille active plus visible */
-#header .app-menu-entry--active .app-menu-entry__icon,
-#header .app-menu-entry:hover .app-menu-entry__icon {
-	opacity: 1;
-}
-#header .app-menu-entry--active::before {
-	background-color: #A5B4FC !important;
-}
-
-/* --- Navigation de gauche --------------------------------------------------- */
+/* --- Navigation de gauche : élément actif marqué par un filet ------------- */
 .app-navigation-entry.active,
 .app-navigation-entry.active:hover {
-	background: linear-gradient(90deg, #4338CA 0%, #5B4FE0 100%) !important;
-	box-shadow: 0 4px 14px rgba(67, 56, 202, 0.35);
-}
-.app-navigation-entry {
-	transition: background-color 0.15s ease, transform 0.15s ease;
-}
-.app-navigation-entry:not(.active):hover {
-	transform: translateX(2px);
+	box-shadow: inset 3px 0 0 #7FC4CD;
 }
 
-/* --- Contenu : carte légèrement détachée du fond --------------------------- */
-#content.app-files,
-#content-vue.app-files,
-#content {
-	box-shadow: 0 10px 40px rgba(8, 10, 40, 0.28);
-}
-
-/* Lignes de fichiers : survol discret aux couleurs S-Drive */
-.files-list__row:hover,
-.files-list__row--hover {
-	background-color: rgba(99, 102, 241, 0.08) !important;
-}
-
-/* --- Boutons principaux : dégradé ------------------------------------------ */
-.button-vue--vue-primary:not(:disabled) {
-	background: linear-gradient(135deg, #4F46E5 0%, #4338CA 60%, #3730A3 100%) !important;
-	box-shadow: 0 4px 14px rgba(67, 56, 202, 0.35);
-}
-.button-vue--vue-primary:not(:disabled):hover {
-	filter: brightness(1.08);
-}
-
-/* --- Page de connexion ------------------------------------------------------ */
+/* --- Page de connexion : carte nette, sans transparence ------------------- */
 #header.header-guest .logo {
-	width: 260px;
-	height: 70px;
+	width: 220px;
+	height: 56px;
 	background-size: contain;
 	background-position: center;
 }
 body#body-login .guest-box,
-body#body-login .login-box,
-body#body-login form.login-form {
-	background: rgba(17, 20, 56, 0.62);
-	backdrop-filter: blur(18px) saturate(140%);
-	-webkit-backdrop-filter: blur(18px) saturate(140%);
-	border: 1px solid rgba(165, 180, 252, 0.18);
-	box-shadow: 0 20px 60px rgba(5, 7, 30, 0.45);
-}
-body#body-login footer.guest-box {
-	background: rgba(17, 20, 56, 0.45);
+body#body-login .login-box {
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	box-shadow: none;
 }
