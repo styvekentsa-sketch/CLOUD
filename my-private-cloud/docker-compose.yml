@@ -256,6 +256,8 @@ services:
       - ./scripts/hooks/post-installation:/docker-entrypoint-hooks.d/post-installation:ro
       - ./scripts/hooks/before-starting:/docker-entrypoint-hooks.d/before-starting:ro
       - ./scripts/occ:/opt/scripts:ro
+      # Logos, fond d'écran et CSS S-Drive (scripts/occ/branding.sh)
+      - ./config/branding:/opt/branding:ro
     ports:
       # LOCAL : 0.0.0.0 -> http://localhost:8080 ET http://<IP-LAN>:8080
       # VPS   : 127.0.0.1 -> seul le proxy (NPM / Cloudflare) est public
