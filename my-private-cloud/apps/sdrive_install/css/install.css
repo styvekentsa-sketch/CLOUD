@@ -1,0 +1,97 @@
+/* S-Drive — page « Installer l'application ». Sobre, variables du thème. */
+
+.sdi {
+	box-sizing: border-box;
+	overflow-y: auto;
+	height: 100%;
+	padding: 32px 16px 48px;
+}
+.sdi-wrap {
+	max-width: 640px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.sdi-head {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	margin-bottom: 8px;
+}
+.sdi-logo {
+	flex: 0 0 auto;
+	border-radius: 14px;
+}
+.sdi-head h2 {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 600;
+}
+.sdi-head p {
+	margin: 4px 0 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.sdi-card {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large, 8px);
+	padding: 20px 24px;
+	text-align: start;
+}
+.sdi-card h3 {
+	margin: 0 0 12px;
+	font-size: 17px;
+	font-weight: 600;
+}
+.sdi-card p { margin: 0 0 8px; }
+
+.sdi-btn {
+	display: inline-block;
+	margin: 4px 8px 8px 0;
+	padding: 10px 18px;
+	border-radius: var(--border-radius-element, 8px);
+	border: 1px solid var(--color-border-dark);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+}
+.sdi-btn:hover { background: var(--color-background-hover); }
+.sdi-primary,
+.sdi-primary:hover {
+	background: var(--color-primary-element);
+	border-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}
+.sdi-primary:hover { filter: brightness(1.08); }
+
+.sdi-steps {
+	margin: 8px 0 8px 20px;
+	padding: 0;
+	list-style: decimal;
+}
+.sdi-steps li { margin: 4px 0; }
+
+.sdi-note {
+	font-size: 13px;
+	color: var(--color-text-maxcontrast);
+}
+.sdi-url {
+	width: 100%;
+	margin: 4px 0 8px;
+	font-family: monospace;
+}
+.sdi-alt a {
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
+/* Page publique (non connecté) : la carte suit la largeur de l'écran */
+body#body-public .sdi,
+body.guest .sdi { height: auto; padding-top: 0; }
+#body-login .sdi-wrap { text-align: start; }

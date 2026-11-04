@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>sdrive_install</id>
+	<name>Installer S-Drive</name>
+	<summary>Bouton « Télécharger l'application » : raccourci S-Drive pour chaque appareil</summary>
+	<description>Page (accessible sans connexion) qui détecte l'appareil et propose le bon raccourci : application installable (Chrome/Edge), fichier .url (Windows), .webloc (Mac), .desktop (Linux), profil d'icône (iPhone/iPad), instructions (Android).</description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author>S-Drive</author>
+	<namespace>SDriveInstall</namespace>
+	<category>tools</category>
+	<dependencies>
+		<nextcloud min-version="30" max-version="33"/>
+	</dependencies>
+	<navigations>
+		<navigation>
+			<id>sdrive_install</id>
+			<name>Application</name>
+			<route>sdrive_install.install.index</route>
+			<icon>app.svg</icon>
+			<order>90</order>
+		</navigation>
+	</navigations>
+</info>

@@ -263,6 +263,8 @@ services:
       - ./apps/sdrive_users:/var/www/html/custom_apps/sdrive_users:ro
       # Pages "Vidéos" et "Audio" du menu (apps/sdrive_media)
       - ./apps/sdrive_media:/var/www/html/custom_apps/sdrive_media:ro
+      # Bouton "Télécharger l'application" : raccourcis par appareil (apps/sdrive_install)
+      - ./apps/sdrive_install:/var/www/html/custom_apps/sdrive_install:ro
       # Icônes S-Drive du menu (config "theme" => "sdrive", cf. branding.sh)
       - ./config/branding/theme:/var/www/html/themes/sdrive:ro
     ports:
