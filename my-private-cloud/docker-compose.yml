@@ -259,6 +259,8 @@ services:
       - ./scripts/occ:/opt/scripts:ro
       # Logos, fond d'écran et CSS S-Drive (scripts/occ/branding.sh)
       - ./config/branding:/opt/branding:ro
+      # Widget "Comptes S-Drive" du tableau de bord (apps/sdrive_users)
+      - ./apps/sdrive_users:/var/www/html/custom_apps/sdrive_users:ro
     ports:
       # LOCAL : 0.0.0.0 -> http://localhost:8080 ET http://<IP-LAN>:8080
       # VPS   : 127.0.0.1 -> seul le proxy (NPM / Cloudflare) est public

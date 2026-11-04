@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+	<id>sdrive_users</id>
+	<name>Comptes S-Drive</name>
+	<summary>Widget du tableau de bord : qui utilise S-Drive</summary>
+	<description>Widget réservé aux administrateurs : liste des comptes, présence en ligne, dernière connexion, espace utilisé et groupes.</description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author>S-Drive</author>
+	<namespace>SDriveUsers</namespace>
+	<category>dashboard</category>
+	<dependencies>
+		<nextcloud min-version="30" max-version="33"/>
+	</dependencies>
+</info>
