@@ -69,6 +69,11 @@ x-nextcloud-common: &nextcloud-common
     SECURITY_2FA_ENFORCED_GROUPS: ${SECURITY_2FA_ENFORCED_GROUPS:-admin Entreprises Equipe}
     PASSWORD_MIN_LENGTH: ${PASSWORD_MIN_LENGTH:-12}
     DEFAULT_QUOTA: ${DEFAULT_QUOTA:-none}
+    # --- Création de compte en libre-service (scripts/occ/registration.sh) -----
+    REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-false}
+    REGISTRATION_GROUP: ${REGISTRATION_GROUP:-Clients}
+    REGISTRATION_EMAIL_VERIFICATION: ${REGISTRATION_EMAIL_VERIFICATION:-true}
+    REGISTRATION_ADMIN_APPROVAL: ${REGISTRATION_ADMIN_APPROVAL:-false}
     # --- E-mail (SMTP) : lu par l'image à chaque requête (config/smtp.config.php)
     #     -> le mot de passe n'est jamais écrit dans config.php
     SMTP_HOST: ${SMTP_HOST:-}

@@ -36,6 +36,7 @@ sh /opt/scripts/previews.sh
 sh /opt/scripts/branding.sh
 sh /opt/scripts/groups.sh
 sh /opt/scripts/security.sh
+sh /opt/scripts/registration.sh
 sh /opt/scripts/admin-dashboard.sh
 sh /opt/scripts/mail-notifications.sh
 
