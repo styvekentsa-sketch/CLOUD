@@ -1,0 +1,64 @@
+# =============================================================================
+#  S-Drive — cloud maison : interface React + API Node.js + PostgreSQL
+#    docker compose up -d --build        ->  http://localhost:8090
+# =============================================================================
+name: s-drive
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sdrive
+      POSTGRES_USER: sdrive
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sdrive -d sdrive"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [backend]
+    security_opt: ["no-new-privileges:true"]
+
+  api:
+    build: ./server
+    image: s-drive/api:local
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://sdrive:${POSTGRES_PASSWORD}@db:5432/sdrive
+      APP_NAME: S-Drive
+      REGISTRATION_ENABLED: ${REGISTRATION_ENABLED:-true}
+      PASSWORD_MIN_LENGTH: ${PASSWORD_MIN_LENGTH:-12}
+      SESSION_HOURS: ${SESSION_HOURS:-12}
+      REMEMBER_DAYS: ${REMEMBER_DAYS:-30}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost}
+      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-Administrateur}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [backend, frontend]
+    security_opt: ["no-new-privileges:true"]
+
+  web:
+    build: ./web
+    image: s-drive/web:local
+    restart: unless-stopped
+    ports:
+      - "${WEB_BIND:-0.0.0.0}:${WEB_PORT:-8090}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [frontend]
+    security_opt: ["no-new-privileges:true"]
+
+networks:
+  frontend:
+  backend:
+    internal: true   # la base n'est jamais joignable de l'extérieur
+
+volumes:
+  db_data:

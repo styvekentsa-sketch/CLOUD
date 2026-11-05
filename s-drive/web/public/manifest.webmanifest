@@ -1,0 +1,14 @@
+{
+  "name": "S-Drive",
+  "short_name": "S-Drive",
+  "description": "Votre cloud privé et sécurisé",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0A3F48",
+  "theme_color": "#0A3F48",
+  "lang": "fr",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
