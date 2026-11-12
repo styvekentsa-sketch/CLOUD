@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { Navigate, useLocation } from 'react-router-dom'
 import { api, ApiError, type ServerConfig, type User } from './api'
 import { MaintenanceScreen } from './components/MaintenanceScreen'
+import { applyPrefs, resetLocalPrefs, withDefaults } from './prefs'
 
 type AuthState = {
 	user: User | null
@@ -14,6 +15,9 @@ type AuthState = {
 	refreshConfig: () => Promise<void>
 	/** Nouvelle tentative après une maintenance */
 	retry: () => Promise<boolean>
+	/** Vrai juste après une déconnexion volontaire (message sur la page de connexion) */
+	loggedOutNotice: boolean
+	clearLoggedOutNotice: () => void
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -25,6 +29,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const [config, setConfig] = useState<ServerConfig | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [maintenance, setMaintenance] = useState({ blocked: false, message: '' })
+	const [loggedOutNotice, setLoggedOutNotice] = useState(false)
+	const clearLoggedOutNotice = useCallback(() => setLoggedOutNotice(false), [])
+	// Nouvelle connexion : le message de déconnexion n’a plus lieu d’être
+	useEffect(() => { if (user) setLoggedOutNotice(false) }, [user])
 
 	useEffect(() => {
 		Promise.allSettled([api.me(), api.config()]).then(([me, cfg]) => {
@@ -33,6 +41,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			if (cfg.status === 'fulfilled') setConfig(cfg.value)
 			setLoading(false)
 		})
+	}, [])
+
+	// Paramètres personnels du compte connecté (thème, densité, dates…)
+	useEffect(() => {
+		if (!user) return
+		api.preferences().then(({ preferences }) => applyPrefs(withDefaults(preferences))).catch(() => {})
+	}, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+	// Bouton « Précédent » après une déconnexion : une page restaurée depuis le cache du
+	// navigateur (bfcache) serait un instantané de l’époque où l’on était connecté.
+	// On la recharge pour revérifier la session auprès du serveur.
+	useEffect(() => {
+		const onShow = (e: PageTransitionEvent) => { if (e.persisted) window.location.reload() }
+		window.addEventListener('pageshow', onShow)
+		return () => window.removeEventListener('pageshow', onShow)
 	}, [])
 
 	// Maintenance activée pendant la navigation (n'importe quel appel répond 503)
@@ -71,15 +94,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		try {
 			await api.logout()
 		} catch (e) {
-			if (!(e instanceof ApiError)) throw e
+			// Session déjà expirée côté serveur (401) : rien à fermer, on continue.
+			// Serveur injoignable ou en erreur : on ne fait PAS semblant d’être déconnecté.
+			if (!(e instanceof ApiError) || e.status === 0 || e.status >= 500) throw e
 		}
+		setLoggedOutNotice(true)
 		setUser(null)
 		setMaintenance({ blocked: false, message: '' })
+		resetLocalPrefs() // appareil partagé : la personne suivante n’hérite pas de vos réglages
 	}, [])
 
 	const value = useMemo(
-		() => ({ user, config, loading, maintenance, setUser, logout, refreshConfig, retry }),
-		[user, config, loading, maintenance, logout, refreshConfig, retry],
+		() => ({ user, config, loading, maintenance, setUser, logout, refreshConfig, retry, loggedOutNotice, clearLoggedOutNotice }),
+		[user, config, loading, maintenance, logout, refreshConfig, retry, loggedOutNotice, clearLoggedOutNotice],
 	)
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

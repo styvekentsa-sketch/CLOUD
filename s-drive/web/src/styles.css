@@ -32,8 +32,9 @@
 	color-scheme: dark;
 }
 
+/* Thème clair : préférence du système (sauf si l’utilisateur a choisi « Sombre »)… */
 @media (prefers-color-scheme: light) {
-	:root {
+	:root:not([data-theme="dark"]) {
 		--bg-main: #ffffff;
 		--bg-main-blur: rgba(255, 255, 255, 0.9);
 		--bg-hover: #f2f2f2;
@@ -52,6 +53,25 @@
 		color-scheme: light;
 	}
 }
+/* …ou choix explicite « Clair » dans Paramètres personnels */
+:root[data-theme="light"] {
+	--bg-main: #ffffff;
+	--bg-main-blur: rgba(255, 255, 255, 0.9);
+	--bg-hover: #f2f2f2;
+	--bg-dark: #ededed;
+	--text: #222222;
+	--text-muted: #6b6b6b;
+	--border: #ededed;
+	--border-strong: #949494;
+	--primary: #0b5563;
+	--primary-text: #ffffff;
+	--primary-light: #e3eff1;
+	--primary-light-text: #0b3f48;
+	--error: #c9302c;
+	--success: #2d7d57;
+	--shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+	color-scheme: light;
+	}
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body, #root { height: 100%; }

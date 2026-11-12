@@ -3,13 +3,16 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api'
 import { useAuth } from '../auth'
 import { Checkbox, Field, GuestLayout } from '../components/Guest'
-import { IconAlert, IconArrowRight, IconSettings } from '../components/Icons'
+import { IconAlert, IconArrowRight, IconLogout, IconSettings, IconX } from '../components/Icons'
+import { localPrefs } from '../prefs'
 
 export function Login() {
-	const { user, config, setUser } = useAuth()
+	const { user, config, setUser, loggedOutNotice, clearLoggedOutNotice } = useAuth()
 	const navigate = useNavigate()
 	const location = useLocation()
-	const from = (location.state as { from?: string } | null)?.from ?? '/tableau-de-bord'
+	const state = location.state as { from?: string } | null
+	// Après connexion : la page demandée, sinon la page d’accueil choisie dans les paramètres personnels
+	const from = state?.from ?? (localPrefs().display.startPage === 'files' ? '/fichiers' : '/tableau-de-bord')
 
 	const [login, setLogin] = useState('')
 	const [password, setPassword] = useState('')
@@ -54,6 +57,13 @@ export function Login() {
 		<GuestLayout>
 			<form className="login-form" onSubmit={submit} noValidate>
 				<h1 className="guest-title">Se connecter à S-Drive</h1>
+				{loggedOutNotice && !error && (
+					<div className="logout-notice" role="status">
+						<IconLogout size={18} />
+						<span>Vous êtes déconnecté. À bientôt !</span>
+						<button type="button" className="icon-btn" aria-label="Masquer" onClick={clearLoggedOutNotice}><IconX size={16} /></button>
+					</div>
+				)}
 				{config?.maintenance.enabled && (
 					<div className="maintenance-banner" role="status">
 						<IconSettings size={18} />

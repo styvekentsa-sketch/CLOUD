@@ -1,4 +1,4 @@
-import { StrictMode, type ReactNode } from 'react'
+import { StrictMode, useEffect, useState, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, RequireAuth, useAuth } from './auth'
@@ -15,6 +15,21 @@ import { Shares } from './pages/admin/Shares'
 import { Settings } from './pages/admin/Settings'
 import './styles.css'
 import './admin.css'
+import { applyPrefs, localPrefs } from './prefs'
+
+// Thème et affichage appliqués avant le premier rendu (pas de « flash » de thème)
+applyPrefs(localPrefs())
+
+/** Redessine les pages quand les paramètres personnels changent (format des dates…). */
+function PrefsRefresher({ children }: { children: () => ReactNode }) {
+	const [, bump] = useState(0)
+	useEffect(() => {
+		const on = () => bump((n) => n + 1)
+		window.addEventListener('sdrive:prefs', on)
+		return () => window.removeEventListener('sdrive:prefs', on)
+	}, [])
+	return <>{children()}</>
+}
 
 const page = (el: ReactNode) => <RequireAuth>{el}</RequireAuth>
 
@@ -31,9 +46,11 @@ createRoot(document.getElementById('root')!).render(
 		<BrowserRouter>
 			<AuthProvider>
 				<ToastProvider>
+					<PrefsRefresher>{() => (
 					<Routes>
 						<Route path="/connexion" element={<Login />} />
 						<Route path="/inscription" element={<Register />} />
+						<Route path="/login" element={<Navigate to="/connexion" replace />} />
 						<Route path="/tableau-de-bord" element={page(<Dashboard />)} />
 						<Route path="/tableau-de-bord/comptes" element={admin(<Users />)} />
 						<Route path="/tableau-de-bord/sessions" element={admin(<Sessions />)} />
@@ -52,6 +69,7 @@ createRoot(document.getElementById('root')!).render(
 						<Route path="/application" element={page(<ComingSoon app="application" />)} />
 						<Route path="*" element={<Navigate to="/tableau-de-bord" replace />} />
 					</Routes>
+					)}</PrefsRefresher>
 				</ToastProvider>
 			</AuthProvider>
 		</BrowserRouter>

@@ -120,6 +120,8 @@ export const api = {
 	invitationInfo: (token: string) =>
 		request<{ valid: boolean; email?: string | null; expiresAt?: string; reason?: string }>('GET', `/api/auth/invitation${qs({ token })}`),
 	preferences: () => request<{ preferences: Preferences }>('GET', '/api/me/preferences'),
+	changePassword: (currentPassword: string, newPassword: string) =>
+		request<{ ok: true; otherSessionsClosed: number }>('POST', '/api/me/password', { currentPassword, newPassword }),
 	savePreferences: (p: Preferences) => request<{ preferences: Preferences }>('PUT', '/api/me/preferences', p),
 }
 
@@ -201,6 +203,9 @@ export type SystemInfo = {
 export type WidgetSize = 3 | 4 | 6 | 8 | 12
 export type Preferences = {
 	dashboard?: { widgets: { id: string; size: WidgetSize }[]; days: 7 | 30 | 90 }
+	appearance?: import('./prefs').Appearance
+	notifications?: import('./prefs').Notifications
+	display?: import('./prefs').Display
 }
 
 export type StorageInfo = {

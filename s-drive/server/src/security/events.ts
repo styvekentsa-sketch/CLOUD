@@ -23,6 +23,8 @@ export type EventType =
 	| 'settings.update'
 	| 'invitation.create'
 	| 'invitation.revoke'
+	| 'password.change'
+	| 'password.change_failed'
 
 export async function logEvent(
 	req: FastifyRequest | null,

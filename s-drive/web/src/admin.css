@@ -37,8 +37,9 @@
 	--info-text: #6fd2e2;
 }
 
+/* Thème clair : préférence du système (sauf si l’utilisateur a choisi « Sombre »)… */
 @media (prefers-color-scheme: light) {
-	:root {
+	:root:not([data-theme="dark"]) {
 		--surface-card: #ffffff;
 		--surface-card-hover: #f6f7f7;
 		--border-card: #e3e5e5;
@@ -63,6 +64,31 @@
 		--info-text: #006b7d;
 	}
 }
+/* …ou choix explicite « Clair » dans Paramètres personnels */
+:root[data-theme="light"] {
+	--surface-card: #ffffff;
+	--surface-card-hover: #f6f7f7;
+	--border-card: #e3e5e5;
+	--grid: #eceeee;
+	--axis: #6b6f6f;
+	--series-1: #00889e;
+	--series-2: #eb6834;
+	--neutral-mark: #a3a8a8;
+	--heat-0: #eef1f1;
+	--heat-1: #c9e9ee;
+	--heat-2: #82cbd7;
+	--heat-3: #2fa3b8;
+	--heat-4: #0b6e80;
+	--good-bg: rgba(12, 163, 12, 0.1);
+	--warning-bg: rgba(250, 178, 25, 0.16);
+	--critical-bg: rgba(208, 59, 59, 0.1);
+	--info-bg: rgba(0, 136, 158, 0.1);
+	--neutral-bg: rgba(0, 0, 0, 0.05);
+	--good-text: #0a6e0a;
+	--warning-text: #8a5a00;
+	--critical-text: #b02a2a;
+	--info-text: #006b7d;
+	}
 
 .muted { color: var(--text-muted); }
 .mono { font-family: ui-monospace, 'Cascadia Code', Consolas, monospace; font-size: 0.92em; }
@@ -1007,3 +1033,89 @@
 		mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
 	}
 }
+
+/* =============================================================================
+   Compte : menu, profil, paramètres personnels
+   ============================================================================= */
+.user-menu-pop .menu-sep { border: 0; border-top: 1px solid var(--border-card); margin: 4px 0; }
+.logout-notice {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: -6px 0 12px;
+	padding: 8px 6px 8px 12px;
+	border-radius: var(--radius);
+	background: var(--info-bg);
+	color: var(--info-text);
+	font-size: 14px;
+}
+.logout-notice span { flex: 1; }
+.logout-notice .icon-btn { color: inherit; width: 28px; height: 28px; }
+
+.profile { display: flex; flex-direction: column; gap: 18px; }
+.profile-head { display: flex; align-items: center; gap: 16px; }
+.profile-id { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.profile-id strong { font-size: 18px; }
+.profile-id span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
+.profile-fact { padding: 12px 14px; border-radius: var(--radius); background: var(--bg-dark); min-width: 0; }
+.profile-fact--wide { grid-column: 1 / -1; }
+.profile-fact dt { font-size: 12.5px; color: var(--text-muted); margin-bottom: 6px; }
+.profile-fact dd { margin: 0; font-weight: 600; }
+.profile-fact .sbar-text { font-weight: 400; }
+.profile-security { padding-top: 16px; border-top: 1px solid var(--border-card); }
+.profile-security-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.profile-security h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 15px; }
+.profile-security p { margin: 0; font-size: 13.5px; }
+.pw-form { margin-top: 14px; }
+.pw-note { margin: 0 0 12px !important; font-size: 13px; }
+.pw-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 520px) {
+	.profile-head { flex-wrap: wrap; }
+	.profile-facts { grid-template-columns: 1fr; }
+}
+
+.prefs { display: flex; flex-direction: column; gap: 20px; }
+.prefs section { display: flex; flex-direction: column; gap: 4px; }
+.prefs h3 { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.pref-note { margin: 0 0 6px !important; font-size: 13px; }
+.pref-row, .pref-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--border-card);
+}
+.prefs section > :last-child { border-bottom: 0; }
+.pref-row > span, .pref-toggle > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+.pref-row .muted, .pref-toggle .muted { font-size: 13px; }
+.pref-row select {
+	height: 36px;
+	padding: 0 10px;
+	border: 1px solid var(--border-card);
+	border-radius: var(--radius);
+	background: var(--bg-main);
+}
+.pref-toggle { cursor: pointer; }
+.switch--small { justify-self: auto; flex: 0 0 auto; }
+.switch--small input:checked + .switch-track { background: var(--primary); }
+@media (max-width: 560px) { .pref-row { flex-direction: column; align-items: flex-start; gap: 8px; } }
+
+/* Densité compacte (Paramètres personnels) */
+:root[data-density="compact"] .data-table td { padding-top: 6px; padding-bottom: 6px; }
+:root[data-density="compact"] .data-table th { padding-top: 7px; padding-bottom: 7px; }
+:root[data-density="compact"] .w-row, :root[data-density="compact"] .rank-row { padding-top: 4px; padding-bottom: 4px; }
+:root[data-density="compact"] .timeline li { padding-top: 6px; padding-bottom: 6px; }
+:root[data-density="compact"] .nav-entry { min-height: 36px; }
+:root[data-density="compact"] .widget-card, :root[data-density="compact"] .sys-card { padding: 12px; }
+:root[data-density="compact"] .widgets, :root[data-density="compact"] .sys-grid { gap: 12px; }
+/* Réduire les animations */
+:root[data-reduce-motion] *, :root[data-reduce-motion] *::before, :root[data-reduce-motion] *::after {
+	animation: none !important;
+	transition: none !important;
+	scroll-behavior: auto !important;
+}
+
+/* Barre de stockage dans le profil : piste contrastée sur le fond gris de la carte */
+.profile-fact .sbar-track { background: var(--bg-main); }

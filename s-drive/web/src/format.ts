@@ -1,7 +1,14 @@
 // Formats français : « il y a 5 min », « 12 nov. », « 1,2 Go », « 3 j 4 h ».
 
+// Affichage des dates (Paramètres personnels) : « il y a 5 min » ou date et heure précises
+let dateMode: 'relative' | 'absolute' = 'relative'
+export function setDateMode(m: 'relative' | 'absolute'): void {
+	dateMode = m
+}
+
 export function ago(iso: string | null | undefined): string {
 	if (!iso) return 'jamais'
+	if (dateMode === 'absolute') return dateTime(iso)
 	const d = (Date.now() - new Date(iso).getTime()) / 1000
 	if (d < 60) return 'à l’instant'
 	if (d < 3600) return `il y a ${Math.floor(d / 60)} min`

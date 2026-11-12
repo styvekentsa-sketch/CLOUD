@@ -133,7 +133,7 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 	const GROUPS: Record<string, string[]> = {
 		auth: ['login.success', 'logout', 'register'],
 		failures: ['login.failure', 'login.throttled'],
-		accounts: ['user.create', 'user.update', 'user.delete', 'register'],
+		accounts: ['user.create', 'user.update', 'user.delete', 'register', 'password.change', 'password.change_failed'],
 		sessions: ['sessions.revoke', 'session.revoke', 'logout'],
 		shares: ['share.create', 'share.revoke'],
 		maintenance: ['maintenance.trash_purge', 'maintenance.orphan_scan', 'maintenance.orphan_clean'],

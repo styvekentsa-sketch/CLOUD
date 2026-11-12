@@ -4,6 +4,11 @@ import { pool } from '../db.js'
 import { requireUser } from '../security/guards.js'
 import { FileTooLargeError, fits, getUsage, QuotaExceededError, withinUploadLimit } from '../storage/quota.js'
 import { getSettings } from '../settings.js'
+import { config } from '../config.js'
+import { hashPassword, verifyPassword } from '../security/password.js'
+import { recordFailure, recordSuccess, retryAfter } from '../security/throttle.js'
+import { logEvent } from '../security/events.js'
+import { fieldErrors } from './auth.js'
 
 // Préférences personnelles. Pour l'instant : la disposition du tableau de bord
 // (widgets affichés, ordre, taille) et la période des statistiques.
@@ -16,6 +21,30 @@ const prefsSchema = z.object({
 		widgets: z.array(widget).max(40),
 		days: z.union([z.literal(7), z.literal(30), z.literal(90)]).default(30),
 	}).optional(),
+	// Paramètres personnels
+	appearance: z.object({
+		theme: z.enum(['system', 'dark', 'light']),
+		density: z.enum(['comfortable', 'compact']),
+		reduceMotion: z.boolean(),
+	}).optional(),
+	notifications: z.object({
+		newLogin: z.boolean(),
+		storageWarning: z.boolean(),
+		shares: z.boolean(),
+		weeklySummary: z.boolean(),
+	}).optional(),
+	display: z.object({
+		language: z.enum(['fr']),
+		startPage: z.enum(['dashboard', 'files']),
+		dateFormat: z.enum(['relative', 'absolute']),
+	}).optional(),
+})
+
+const passwordSchema = z.object({
+	currentPassword: z.string().min(1, { error: 'Indiquez votre mot de passe actuel.' }).max(256),
+	newPassword: z.string()
+		.min(config.passwordMinLength, { error: `Au moins ${config.passwordMinLength} caractères.` })
+		.max(256, { error: 'Mot de passe trop long.' }),
 })
 
 export async function meRoutes(app: FastifyInstance): Promise<void> {
@@ -61,5 +90,41 @@ export async function meRoutes(app: FastifyInstance): Promise<void> {
 			[req.sdUser!.id, JSON.stringify(parsed.data)],
 		)
 		return { preferences: rows[0].preferences }
+	})
+
+	// Changement de son propre mot de passe : mot de passe actuel exigé, protection
+	// contre les essais répétés, autres sessions fermées, inscrit au journal.
+	app.post('/api/me/password', async (req, reply) => {
+		const me = req.sdUser!
+		const parsed = passwordSchema.safeParse(req.body)
+		if (!parsed.success) return reply.code(400).send({ error: 'validation', fields: fieldErrors(parsed.error) })
+		const { currentPassword, newPassword } = parsed.data
+
+		const throttleKey = `mot-de-passe:${me.id}`
+		const wait = retryAfter(req.ip, throttleKey)
+		if (wait > 0) {
+			reply.header('Retry-After', String(wait))
+			return reply.code(429).send({ error: 'throttled', retryAfter: wait, message: `Trop de tentatives. Réessayez dans ${wait} seconde${wait > 1 ? 's' : ''}.` })
+		}
+
+		const { rows } = await pool.query('SELECT password_hash FROM users WHERE id = $1', [me.id])
+		if (!rows[0] || !(await verifyPassword(currentPassword, rows[0].password_hash))) {
+			recordFailure(req.ip, throttleKey)
+			await logEvent(req, 'password.change_failed', { userId: me.id, meta: { username: me.username } })
+			return reply.code(403).send({ error: 'wrong_password', fields: { currentPassword: 'Mot de passe actuel incorrect.' } })
+		}
+		recordSuccess(req.ip, throttleKey)
+		if (newPassword === currentPassword) {
+			return reply.code(400).send({ error: 'validation', fields: { newPassword: 'Le nouveau mot de passe doit être différent de l’actuel.' } })
+		}
+		if (newPassword.toLowerCase().includes(me.username.toLowerCase())) {
+			return reply.code(400).send({ error: 'validation', fields: { newPassword: 'Le mot de passe ne doit pas contenir votre identifiant.' } })
+		}
+
+		await pool.query('UPDATE users SET password_hash = $2 WHERE id = $1', [me.id, await hashPassword(newPassword)])
+		// Les autres appareils devront se reconnecter avec le nouveau mot de passe
+		const { rowCount } = await pool.query('DELETE FROM sessions WHERE user_id = $1 AND id <> $2', [me.id, me.session_id])
+		await logEvent(req, 'password.change', { userId: me.id, meta: { username: me.username, otherSessionsClosed: rowCount ?? 0 } })
+		return { ok: true, otherSessionsClosed: rowCount ?? 0 }
 	})
 }

@@ -68,6 +68,12 @@ Modifiables depuis l’interface et enregistrés en base (table `settings`), app
 
 Chaque modification est inscrite au journal de sécurité (avant → après, filtre « Paramètres »). Si deux administrateurs modifient en même temps, le second est prévenu au lieu d’écraser les changements du premier.
 
+## Menu du compte (avatar en haut à droite)
+
+- **Voir le profil** : avatar, nom, identifiant, e-mail, rôle, stockage utilisé / quota, date d’inscription, dernière connexion. **Changement de mot de passe** : mot de passe actuel exigé, confirmation, protection contre les essais répétés ; les autres sessions sont fermées ; inscrit au journal.
+- **Paramètres personnels** (enregistrés sur le compte et appliqués dès le chargement) : thème Système / Sombre / Clair, densité, réduction des animations, préférences de notifications (enregistrées ; envoi quand les notifications seront disponibles), langue (français), page d’accueil, format des dates.
+- **Se déconnecter** : session supprimée côté serveur, cookie effacé, inscrit au journal, retour à `/connexion` (alias `/login`). La page n’est jamais mise en cache (`Cache-Control: no-store`) : le bouton « Précédent » ne réaffiche pas une page connectée. Les réglages d’affichage du compte sont retirés de l’appareil.
+
 ## Sécurité
 
 - Mots de passe hachés avec **scrypt** (sel aléatoire), jamais stockés en clair.

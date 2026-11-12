@@ -23,6 +23,8 @@ const KINDS: Record<string, { label: string; tone: Tone; icon: (s: number) => Re
 	'maintenance.trash_purge': { label: 'Maintenance — corbeilles vidées', tone: 'warning', icon: (s) => <IconTrash size={s} /> },
 	'maintenance.orphan_scan': { label: 'Maintenance — analyse des orphelins', tone: 'info', icon: (s) => <IconServer size={s} /> },
 	'maintenance.orphan_clean': { label: 'Maintenance — orphelins nettoyés', tone: 'warning', icon: (s) => <IconServer size={s} /> },
+	'password.change': { label: 'Mot de passe changé', tone: 'info', icon: (s) => <IconLock size={s} /> },
+	'password.change_failed': { label: 'Changement de mot de passe refusé', tone: 'critical', icon: (s) => <IconAlert size={s} /> },
 	'settings.update': { label: 'Paramètres modifiés', tone: 'warning', icon: (s) => <IconEdit size={s} /> },
 	'invitation.create': { label: 'Invitation créée', tone: 'info', icon: (s) => <IconUserPlus size={s} /> },
 	'invitation.revoke': { label: 'Invitation annulée', tone: 'neutral', icon: (s) => <IconX size={s} /> },
@@ -71,6 +73,12 @@ export function eventSentence(e: SecurityEvent): string {
 		case 'sessions.revoke': return `${e.meta.count ?? 'Les'} session(s) de ${who(e)} fermée(s)${actor}`
 		case 'session.revoke': return `Une session de ${who(e)} fermée${actor}`
 		case 'share.create': return `${who(e)} a partagé « ${String(e.meta.itemName ?? '?')} » par lien public`
+		case 'password.change': {
+			const n = Number(e.meta.otherSessionsClosed ?? 0)
+			return `${who(e)} a changé son mot de passe${n > 0 ? ` (${n} autre${n > 1 ? 's' : ''} session${n > 1 ? 's' : ''} fermée${n > 1 ? 's' : ''})` : ''}`
+		}
+		case 'password.change_failed':
+			return `${who(e)} : changement de mot de passe refusé (mot de passe actuel incorrect)`
 		case 'settings.update':
 			return `Paramètres : ${describeSettings((e.meta.changes ?? {}) as Record<string, { from: unknown; to: unknown }>) || 'modifiés'}${actor}`
 		case 'invitation.create':
