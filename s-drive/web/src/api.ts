@@ -41,9 +41,15 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 			body: body !== undefined ? JSON.stringify(body) : undefined,
 		})
 	} catch {
-		throw new ApiError(0, 'network', 'Impossible de joindre S-Drive. Vérifiez votre connexion.')
+		throw new ApiError(0, 'network',
+			'Impossible de joindre S-Drive. Vérifiez votre connexion, et que le PC serveur et Docker Desktop sont allumés.')
 	}
 	const data = await res.json().catch(() => ({}))
+	// Nginx répond mais le serveur Node.js est arrêté ou en cours de démarrage
+	if (res.status >= 502 && res.status <= 504 && !data.message) {
+		throw new ApiError(res.status, 'unavailable',
+			'S-Drive ne répond pas pour le moment (serveur arrêté ou en cours de démarrage). Réessayez dans une minute.')
+	}
 	if (!res.ok) {
 		throw new ApiError(
 			res.status,
