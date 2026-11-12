@@ -12,6 +12,7 @@ import { Sessions } from './pages/admin/Sessions'
 import { Journal } from './pages/admin/Journal'
 import { System } from './pages/admin/System'
 import { Shares } from './pages/admin/Shares'
+import { Settings } from './pages/admin/Settings'
 import './styles.css'
 import './admin.css'
 
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
 						<Route path="/tableau-de-bord/partages" element={admin(<Shares />)} />
 						<Route path="/tableau-de-bord/journal" element={admin(<Journal />)} />
 						<Route path="/tableau-de-bord/systeme" element={admin(<System />)} />
+						<Route path="/tableau-de-bord/parametres" element={admin(<Settings />)} />
 						<Route path="/fichiers" element={page(<Files />)} />
 						{FILES_SUBPAGES.map((p) => (
 							<Route key={p.path} path={p.path} element={page(<Files title={p.title} />)} />

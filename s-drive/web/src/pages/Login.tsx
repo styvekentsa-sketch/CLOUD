@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api'
 import { useAuth } from '../auth'
 import { Checkbox, Field, GuestLayout } from '../components/Guest'
-import { IconAlert, IconArrowRight } from '../components/Icons'
+import { IconAlert, IconArrowRight, IconSettings } from '../components/Icons'
 
 export function Login() {
 	const { user, config, setUser } = useAuth()
@@ -54,6 +54,12 @@ export function Login() {
 		<GuestLayout>
 			<form className="login-form" onSubmit={submit} noValidate>
 				<h1 className="guest-title">Se connecter à S-Drive</h1>
+				{config?.maintenance.enabled && (
+					<div className="maintenance-banner" role="status">
+						<IconSettings size={18} />
+						<span><strong>Maintenance en cours.</strong> Seuls les administrateurs peuvent se connecter.</span>
+					</div>
+				)}
 
 				<Field label="Nom d'utilisateur ou adresse e-mail" autoComplete="username" autoCapitalize="none"
 					spellCheck={false} required value={login} onChange={(e) => setLogin(e.target.value)} autoFocus />
@@ -84,8 +90,11 @@ export function Login() {
 					</p>
 				)}
 
-				{config?.registrationEnabled && (
+				{config?.registrationMode === 'open' && !config.maintenance.enabled && (
 					<Link to="/inscription" className="btn btn-secondary btn-wide">S'inscrire</Link>
+				)}
+				{config?.registrationMode === 'invite' && !config.maintenance.enabled && (
+					<p className="guest-note">Inscription sur invitation : utilisez le lien que vous avez reçu.</p>
 				)}
 			</form>
 		</GuestLayout>

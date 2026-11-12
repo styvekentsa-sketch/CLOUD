@@ -21,7 +21,7 @@ Au premier démarrage, le compte administrateur est créé avec les valeurs `ADM
 
 | Fonction | Détail |
 |---|---|
-| Inscription | L'utilisateur choisit son identifiant, son nom, son e-mail et un mot de passe (12 caractères au minimum). Désactivable avec `REGISTRATION_ENABLED=false`. |
+| Inscription | L’utilisateur choisit son identifiant, son nom, son e-mail et un mot de passe (12 caractères au minimum). Mode réglable dans Paramètres (ouvertes, sur invitation, fermées). |
 | Connexion | Par identifiant ou par adresse e-mail. « Se souvenir de moi » : 30 jours, sinon 12 h. |
 | Déconnexion | La session est supprimée côté serveur. |
 | Anti force brute | Après 3 échecs, délai croissant (2 s, 4 s, 8 s… jusqu'à 5 min) par IP et identifiant. Au-delà de 30 échecs en 15 min, l'IP est bloquée. |
@@ -54,6 +54,19 @@ Les applications Fichiers, Photos, Activité, Vidéos, Audio et Application sont
 - **Analyser et nettoyer les orphelins** : fichiers sur le disque sans entrée, entrées sans fichier (retrait facultatif), envois abandonnés depuis plus de 24 h.
 - Garde-fous : rien de récent (moins d’1 h) n’est touché, aucun lien symbolique suivi, aucune suppression hors du dossier de stockage, une seule opération à la fois, refus de retirer des entrées si la plupart des fichiers sont introuvables (disque non monté).
 - Chaque action (vidage, analyse, nettoyage) est inscrite au journal de sécurité (filtre « Maintenance »).
+
+## Paramètres (Console > Paramètres)
+
+Modifiables depuis l’interface et enregistrés en base (table `settings`), appliqués immédiatement. Les valeurs de `.env` (`REGISTRATION_ENABLED`, `DEFAULT_QUOTA_GB`) ne servent qu’au tout premier démarrage.
+
+| Paramètre | Effet |
+|---|---|
+| Inscriptions | **Ouvertes** (bouton « S’inscrire »), **Sur invitation** (lien à usage unique, éventuellement réservé à une adresse, valable 24 h / 7 j / 30 j, annulable) ou **Fermées** (comptes créés par un administrateur). |
+| Quota des nouveaux comptes | 5 Go, 20 Go, 100 Go, illimité ou personnalisé. Les comptes existants gardent leur quota. |
+| Taille maximale d’un fichier envoyé | 500 Mo, 2 Go, 10 Go, sans limite ou personnalisé (min. 1 Mo). Vérifiée par `POST /api/me/storage/check` et par `assertUploadAllowed()` (à appeler par l’envoi de fichiers). |
+| Mode maintenance | Seuls les administrateurs peuvent se connecter ; les sessions des utilisateurs sont suspendues (écran de maintenance avec message personnalisable, retour automatique). Bandeau de rappel pour les administrateurs. |
+
+Chaque modification est inscrite au journal de sécurité (avant → après, filtre « Paramètres »). Si deux administrateurs modifient en même temps, le second est prévenu au lieu d’écraser les changements du premier.
 
 ## Sécurité
 

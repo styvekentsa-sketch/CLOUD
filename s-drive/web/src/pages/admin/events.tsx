@@ -23,6 +23,25 @@ const KINDS: Record<string, { label: string; tone: Tone; icon: (s: number) => Re
 	'maintenance.trash_purge': { label: 'Maintenance — corbeilles vidées', tone: 'warning', icon: (s) => <IconTrash size={s} /> },
 	'maintenance.orphan_scan': { label: 'Maintenance — analyse des orphelins', tone: 'info', icon: (s) => <IconServer size={s} /> },
 	'maintenance.orphan_clean': { label: 'Maintenance — orphelins nettoyés', tone: 'warning', icon: (s) => <IconServer size={s} /> },
+	'settings.update': { label: 'Paramètres modifiés', tone: 'warning', icon: (s) => <IconEdit size={s} /> },
+	'invitation.create': { label: 'Invitation créée', tone: 'info', icon: (s) => <IconUserPlus size={s} /> },
+	'invitation.revoke': { label: 'Invitation annulée', tone: 'neutral', icon: (s) => <IconX size={s} /> },
+}
+
+const MODE_LABEL: Record<string, string> = { open: 'ouvertes', invite: 'sur invitation', closed: 'fermées' }
+const size = (v: unknown) => (v === null ? 'illimité' : bytes(Number(v)))
+
+/** « inscriptions : ouvertes → sur invitation ; maintenance activée » */
+function describeSettings(changes: Record<string, { from: unknown; to: unknown }>): string {
+	const parts: string[] = []
+	for (const [k, { from, to }] of Object.entries(changes)) {
+		if (k === 'registrationMode') parts.push(`inscriptions ${MODE_LABEL[String(from)] ?? from} → ${MODE_LABEL[String(to)] ?? to}`)
+		else if (k === 'defaultQuotaBytes') parts.push(`quota par défaut ${size(from)} → ${size(to)}`)
+		else if (k === 'maxUploadBytes') parts.push(`taille max. d’envoi ${from === null ? 'sans limite' : bytes(Number(from))} → ${to === null ? 'sans limite' : bytes(Number(to))}`)
+		else if (k === 'maintenanceEnabled') parts.push(to ? 'mode maintenance ACTIVÉ' : 'mode maintenance désactivé')
+		else if (k === 'maintenanceMessage') parts.push('message de maintenance modifié')
+	}
+	return parts.join(' ; ')
 }
 
 export function eventKind(type: string) {
@@ -52,6 +71,12 @@ export function eventSentence(e: SecurityEvent): string {
 		case 'sessions.revoke': return `${e.meta.count ?? 'Les'} session(s) de ${who(e)} fermée(s)${actor}`
 		case 'session.revoke': return `Une session de ${who(e)} fermée${actor}`
 		case 'share.create': return `${who(e)} a partagé « ${String(e.meta.itemName ?? '?')} » par lien public`
+		case 'settings.update':
+			return `Paramètres : ${describeSettings((e.meta.changes ?? {}) as Record<string, { from: unknown; to: unknown }>) || 'modifiés'}${actor}`
+		case 'invitation.create':
+			return `Invitation créée${e.meta.email ? ` pour ${String(e.meta.email)}` : ' (lien ouvert)'}, valable ${String(e.meta.days ?? 7)} j${actor}`
+		case 'invitation.revoke':
+			return `Invitation${e.meta.email ? ` pour ${String(e.meta.email)}` : ''} annulée${actor}`
 		case 'maintenance.trash_purge': {
 			const m = e.meta as Record<string, number>
 			return `Corbeilles vidées (éléments de plus de ${m.olderThanDays ?? 30} j) : ${m.files ?? 0} fichier(s) supprimé(s), ${bytes(m.bytes ?? 0)} libérés${actor}`

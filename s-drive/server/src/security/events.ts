@@ -20,6 +20,9 @@ export type EventType =
 	| 'maintenance.trash_purge'
 	| 'maintenance.orphan_scan'
 	| 'maintenance.orphan_clean'
+	| 'settings.update'
+	| 'invitation.create'
+	| 'invitation.revoke'
 
 export async function logEvent(
 	req: FastifyRequest | null,

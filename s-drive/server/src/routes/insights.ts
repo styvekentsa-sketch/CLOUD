@@ -6,6 +6,7 @@ import { config } from '../config.js'
 import { requireAdmin } from '../security/guards.js'
 import { activeBlocks } from '../security/throttle.js'
 import { diskUsage } from '../storage/quota.js'
+import { getSettings } from '../settings.js'
 
 const startedAt = new Date()
 const periodQuery = z.object({ days: z.coerce.number().int().refine((d) => [7, 30, 90].includes(d)).default(30) })
@@ -126,7 +127,7 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 		limit: z.coerce.number().int().min(1).max(200).default(50),
 		before: z.coerce.number().int().positive().optional(),
 		type: z.string().regex(/^[a-z.]+$/).max(40).optional(),
-		group: z.enum(['auth', 'failures', 'accounts', 'sessions', 'shares', 'maintenance']).optional(),
+		group: z.enum(['auth', 'failures', 'accounts', 'sessions', 'shares', 'maintenance', 'settings']).optional(),
 		q: z.string().trim().max(100).optional(),
 	})
 	const GROUPS: Record<string, string[]> = {
@@ -136,6 +137,7 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 		sessions: ['sessions.revoke', 'session.revoke', 'logout'],
 		shares: ['share.create', 'share.revoke'],
 		maintenance: ['maintenance.trash_purge', 'maintenance.orphan_scan', 'maintenance.orphan_clean'],
+		settings: ['settings.update', 'invitation.create', 'invitation.revoke'],
 	}
 
 	app.get('/api/admin/events', async (req, reply) => {
@@ -206,7 +208,7 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 			fullUsers: t.full,
 			nearFullUsers: t.near_full,
 			users: t.users,
-			defaultQuota: config.defaultQuotaBytes,
+			defaultQuota: (await getSettings()).defaultQuotaBytes,
 			disk: diskUsage(),
 			top: top.rows.map((u) => ({
 				id: u.id,
@@ -241,7 +243,7 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 			database: { version: db.rows[0].version, sizeBytes: Number(db.rows[0].size), connections: db.rows[0].connections, latencyMs: dbLatencyMs },
 			counts: { ...counts.rows[0], firstEvent: counts.rows[0].first_event },
 			settings: {
-				registrationEnabled: config.registrationEnabled,
+				...(await getSettings()),
 				passwordMinLength: config.passwordMinLength,
 				sessionHours: config.sessionHours,
 				rememberDays: config.rememberDays,

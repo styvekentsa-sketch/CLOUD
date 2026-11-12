@@ -73,6 +73,9 @@ function UserMenu() {
 export function AppShell({ children, navigation }: { children: ReactNode; navigation?: ReactNode }) {
 	// Petits écrans : la navigation de gauche devient un tiroir ouvert par le bouton ☰
 	const [navOpen, setNavOpen] = useState(false)
+	// Rappel permanent pour les administrateurs quand la maintenance est active
+	const { user, config } = useAuth()
+	const maintenanceOn = user?.role === 'admin' && !!config?.maintenance.enabled
 	return (
 		<div className="shell">
 			<header className="header">
@@ -103,6 +106,13 @@ export function AppShell({ children, navigation }: { children: ReactNode; naviga
 					<UserMenu />
 				</div>
 			</header>
+			{maintenanceOn && (
+				<div className="admin-maintenance-bar" role="status">
+					<IconSettings size={16} />
+					<span><strong>Mode maintenance actif</strong> — les utilisateurs ne peuvent pas se connecter.</span>
+					<NavLink to="/tableau-de-bord/parametres">Gérer</NavLink>
+				</div>
+			)}
 			<div className={`content${navigation ? ' content--with-nav' : ''}${navOpen ? ' nav-is-open' : ''}`}>
 				{navigation && (
 					<>

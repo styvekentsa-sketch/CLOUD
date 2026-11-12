@@ -122,6 +122,31 @@ const migrations: string[] = [
 	CREATE INDEX files_parent_idx ON files (parent_id);
 	CREATE INDEX files_trashed_idx ON files (trashed_at) WHERE trashed_at IS NOT NULL;
 	`,
+
+	// 6 — paramètres de la plateforme (une seule ligne) et invitations
+	`
+	CREATE TABLE settings (
+		id          int PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+		data        jsonb NOT NULL,
+		updated_at  timestamptz NOT NULL DEFAULT now(),
+		updated_by  uuid REFERENCES users(id) ON DELETE SET NULL
+	);
+
+	-- Lien d'invitation à usage unique ; seul le hash du jeton est stocké
+	CREATE TABLE invitations (
+		id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+		token_hash  text NOT NULL UNIQUE,
+		email       text,
+		note        text,
+		created_by  uuid REFERENCES users(id) ON DELETE SET NULL,
+		created_at  timestamptz NOT NULL DEFAULT now(),
+		expires_at  timestamptz NOT NULL,
+		used_at     timestamptz,
+		used_by     uuid REFERENCES users(id) ON DELETE SET NULL,
+		revoked_at  timestamptz
+	);
+	CREATE INDEX invitations_created_idx ON invitations (created_at DESC);
+	`,
 ]
 
 export async function migrate(): Promise<void> {

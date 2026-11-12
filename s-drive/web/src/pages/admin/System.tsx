@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../../api'
 import { IconRefresh } from '../../components/Icons'
 import { Badge, useData, type Tone } from '../../components/ui'
@@ -90,13 +91,16 @@ export function System() {
 						<dt>Journal depuis</dt><dd>{s.counts.firstEvent ? dateTime(s.counts.firstEvent) : '—'}</dd>
 					</Card>
 					<Card title="Réglages actifs">
-						<dt>Inscription libre</dt><dd>{s.settings.registrationEnabled ? <Badge tone="good">Ouverte</Badge> : <Badge tone="neutral">Fermée</Badge>}</dd>
+						<dt>Inscriptions</dt><dd>{{ open: <Badge tone="good">Ouvertes</Badge>, invite: <Badge tone="info">Sur invitation</Badge>, closed: <Badge tone="neutral">Fermées</Badge> }[s.settings.registrationMode]}</dd>
+						<dt>Maintenance</dt><dd>{s.settings.maintenance.enabled ? <Badge tone="warning">Activée</Badge> : <Badge tone="good">Désactivée</Badge>}</dd>
+						<dt>Quota par défaut</dt><dd>{s.settings.defaultQuotaBytes === null ? "Illimité" : bytes(s.settings.defaultQuotaBytes)}</dd>
+						<dt>Taille max. d’envoi</dt><dd>{s.settings.maxUploadBytes === null ? "Sans limite" : bytes(s.settings.maxUploadBytes)}</dd>
 						<dt>Mot de passe</dt><dd>{s.settings.passwordMinLength} caractères minimum</dd>
 						<dt>Durée des sessions</dt><dd>{s.settings.sessionHours} h · {s.settings.rememberDays} j avec « Se souvenir de moi »</dd>
 						<dt>Fuseau horaire</dt><dd>{s.settings.timezone}</dd>
 						<dt>Conservation du journal</dt><dd>{s.settings.eventRetentionDays} jours</dd>
 					</Card>
-					<p className="muted sys-note">Les réglages se modifient dans le fichier <span className="mono">s-drive/.env</span>, puis <span className="mono">docker compose up -d</span>.</p>
+					<p className="muted sys-note">Inscriptions, quota par défaut, taille d’envoi et maintenance : <Link to="/tableau-de-bord/parametres">Paramètres</Link>. Les autres réglages (durée des sessions, fuseau, conservation du journal) se modifient dans <span className="mono">s-drive/.env</span>.</p>
 				</div>
 			)}
 		</AdminLayout>

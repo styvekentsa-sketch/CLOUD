@@ -5,7 +5,7 @@ import { requireAdmin } from '../security/guards.js'
 import { hashPassword } from '../security/password.js'
 import { logEvent } from '../security/events.js'
 import { fieldErrors, registerSchema } from './auth.js'
-import { config } from '../config.js'
+import { getSettings } from '../settings.js'
 
 const ONLINE_MS = 5 * 60 * 1000
 const uuid = z.string().uuid()
@@ -118,7 +118,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
 		const parsed = createSchema.safeParse(req.body)
 		if (!parsed.success) return reply.code(400).send({ error: 'validation', fields: fieldErrors(parsed.error) })
 		const { username, email, displayName, password, role, storageQuota } = parsed.data
-		const quota = storageQuota === undefined ? config.defaultQuotaBytes : storageQuota
+		const quota = storageQuota === undefined ? (await getSettings()).defaultQuotaBytes : storageQuota
 		try {
 			const { rows } = await pool.query<{ id: string }>(
 				`INSERT INTO users (username, email, display_name, password_hash, role, storage_quota)

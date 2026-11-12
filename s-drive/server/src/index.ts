@@ -5,6 +5,7 @@ import { hashPassword } from './security/password.js'
 import { purgeExpiredSessions } from './security/sessions.js'
 import { purgeOldEvents } from './security/events.js'
 import { prune } from './security/throttle.js'
+import { getSettings } from './settings.js'
 
 /** Crée le compte administrateur au premier démarrage (aucun admin en base). */
 async function ensureAdmin(): Promise<void> {
@@ -18,7 +19,7 @@ async function ensureAdmin(): Promise<void> {
 	await pool.query(
 		`INSERT INTO users (username, email, display_name, password_hash, role, storage_quota)
 		 VALUES (lower($1), lower($2), $3, $4, 'admin', $5)`,
-		[username, email, displayName, await hashPassword(password), config.defaultQuotaBytes],
+		[username, email, displayName, await hashPassword(password), (await getSettings()).defaultQuotaBytes],
 	)
 	console.log(`[admin] compte administrateur « ${username} » créé`)
 }

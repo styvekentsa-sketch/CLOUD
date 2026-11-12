@@ -20,10 +20,15 @@ export type AdminUser = User & {
 	storageQuota?: number | null
 }
 
+export type RegistrationMode = 'open' | 'invite' | 'closed'
+
 export type ServerConfig = {
 	appName: string
+	registrationMode: RegistrationMode
 	registrationEnabled: boolean
 	passwordMinLength: number
+	maxUploadBytes: number | null
+	maintenance: { enabled: boolean; message: string }
 }
 
 export class ApiError extends Error {
@@ -53,6 +58,10 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 	}
 	const data = await res.json().catch(() => ({}))
 	// Nginx répond mais le serveur Node.js est arrêté ou en cours de démarrage
+	// Mode maintenance activé pendant la navigation : l'interface bascule sur l'écran de maintenance
+	if (res.status === 503 && data.error === 'maintenance') {
+		window.dispatchEvent(new CustomEvent('sdrive:maintenance', { detail: data.message }))
+	}
 	if (res.status >= 502 && res.status <= 504 && !data.message) {
 		throw new ApiError(res.status, 'unavailable',
 			'S-Drive ne répond pas pour le moment (serveur arrêté ou en cours de démarrage). Réessayez dans une minute.')
@@ -74,7 +83,7 @@ export const api = {
 	me: () => request<{ user: User }>('GET', '/api/auth/me'),
 	login: (login: string, password: string, remember: boolean) =>
 		request<{ user: User }>('POST', '/api/auth/login', { login, password, remember }),
-	register: (data: { username: string; email: string; displayName: string; password: string; remember: boolean }) =>
+	register: (data: { username: string; email: string; displayName: string; password: string; remember: boolean; invitation?: string }) =>
 		request<{ user: User }>('POST', '/api/auth/register', data),
 	logout: () => request<{ ok: true }>('POST', '/api/auth/logout'),
 	adminUsers: (filters: Record<string, string> = {}) =>
@@ -102,6 +111,14 @@ export const api = {
 	purgeTrash: () => request<PurgeResult>('POST', '/api/admin/maintenance/trash/purge', { olderThanDays: 30 }),
 	scanOrphans: () => request<ScanResult>('POST', '/api/admin/maintenance/orphans/scan', {}),
 	cleanOrphans: (removeMissing: boolean) => request<CleanResult>('POST', '/api/admin/maintenance/orphans/clean', { removeMissing }),
+	settings: () => request<SettingsPayload>('GET', '/api/admin/settings'),
+	saveSettings: (s: Partial<PlatformSettings> & { expectedUpdatedAt?: string }) => request<SettingsPayload>('PUT', '/api/admin/settings', s),
+	invitations: () => request<{ invitations: Invitation[] }>('GET', '/api/admin/invitations'),
+	createInvitation: (d: { email?: string; note?: string; days: 1 | 7 | 30 }) =>
+		request<{ id: string; token: string; expiresAt: string }>('POST', '/api/admin/invitations', d),
+	revokeInvitation: (id: string) => request<{ ok: true }>('DELETE', `/api/admin/invitations/${encodeURIComponent(id)}`),
+	invitationInfo: (token: string) =>
+		request<{ valid: boolean; email?: string | null; expiresAt?: string; reason?: string }>('GET', `/api/auth/invitation${qs({ token })}`),
 	preferences: () => request<{ preferences: Preferences }>('GET', '/api/me/preferences'),
 	savePreferences: (p: Preferences) => request<{ preferences: Preferences }>('PUT', '/api/me/preferences', p),
 }
@@ -169,7 +186,10 @@ export type SystemInfo = {
 	database: { version: string; sizeBytes: number; connections: number; latencyMs: number }
 	counts: { users: number; sessions: number; events: number; firstEvent: string | null }
 	settings: {
-		registrationEnabled: boolean
+		registrationMode: RegistrationMode
+		defaultQuotaBytes: number | null
+		maxUploadBytes: number | null
+		maintenance: { enabled: boolean; message: string }
 		passwordMinLength: number
 		sessionHours: number
 		rememberDays: number
@@ -264,4 +284,29 @@ export type MaintenanceInfo = {
 	lastScan: (Stamp & ScanSummary) | null
 	lastClean: (Stamp & CleanResult) | null
 	lastPurge: (Stamp & PurgeResult) | null
+}
+
+export type PlatformSettings = {
+	registrationMode: RegistrationMode
+	defaultQuotaBytes: number | null
+	maxUploadBytes: number | null
+	maintenance: { enabled: boolean; message: string }
+}
+export type SettingsPayload = {
+	settings: PlatformSettings
+	updatedAt: string
+	updatedBy: { username: string; displayName: string } | null
+	onlineNonAdmins: number
+}
+export type Invitation = {
+	id: string
+	email: string | null
+	note: string | null
+	createdAt: string
+	expiresAt: string
+	usedAt: string | null
+	revokedAt: string | null
+	createdBy: string | null
+	usedBy: { username: string; displayName: string } | null
+	state: 'pending' | 'used' | 'revoked' | 'expired'
 }

@@ -6,6 +6,7 @@ import { insightsRoutes } from './routes/insights.js'
 import { meRoutes } from './routes/me.js'
 import { sharesRoutes } from './routes/shares.js'
 import { maintenanceRoutes } from './routes/maintenance.js'
+import { settingsRoutes } from './routes/settings.js'
 
 export async function buildApp(): Promise<FastifyInstance> {
 	const app = Fastify({
@@ -80,5 +81,6 @@ export async function buildApp(): Promise<FastifyInstance> {
 	await app.register(meRoutes)
 	await app.register(sharesRoutes)
 	await app.register(maintenanceRoutes)
+	await app.register(settingsRoutes)
 	return app
 }
