@@ -48,6 +48,21 @@ export function prune(now = Date.now()): void {
 	for (const [k, v] of perIp) if (v.blockedUntil < now && now - v.firstAt > IP_WINDOW_MS) perIp.delete(k)
 }
 
+/** Blocages en cours (tableau de bord : « Tentatives suspectes »). */
+export function activeBlocks(now = Date.now()): { ip: string; login: string | null; seconds: number; failures: number }[] {
+	const out: { ip: string; login: string | null; seconds: number; failures: number }[] = []
+	for (const [k, v] of perKey) {
+		if (v.blockedUntil > now) {
+			const i = k.indexOf('|')
+			out.push({ ip: k.slice(0, i), login: k.slice(i + 1), seconds: Math.ceil((v.blockedUntil - now) / 1000), failures: v.failures })
+		}
+	}
+	for (const [ip, v] of perIp) {
+		if (v.blockedUntil > now) out.push({ ip, login: null, seconds: Math.ceil((v.blockedUntil - now) / 1000), failures: v.failures })
+	}
+	return out.sort((a, b) => b.seconds - a.seconds)
+}
+
 /** Pour les tests uniquement. */
 export function _reset(): void {
 	perKey.clear()

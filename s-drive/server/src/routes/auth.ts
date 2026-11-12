@@ -5,6 +5,7 @@ import { config } from '../config.js'
 import { burnPasswordCheck, hashPassword, verifyPassword } from '../security/password.js'
 import { createSession, currentUser, destroySession, type SessionUser } from '../security/sessions.js'
 import { recordFailure, recordSuccess, retryAfter } from '../security/throttle.js'
+import { logEvent, touchActivity } from '../security/events.js'
 
 export function publicUser(u: Omit<SessionUser, 'session_id'>) {
 	return {
@@ -18,7 +19,7 @@ export function publicUser(u: Omit<SessionUser, 'session_id'>) {
 	}
 }
 
-const registerSchema = z.object({
+export const registerSchema = z.object({
 	username: z.string().trim().toLowerCase()
 		.regex(/^[a-z0-9][a-z0-9._-]{2,31}$/, {
 			error: 'De 3 à 32 caractères : lettres minuscules, chiffres, point, tiret ou tiret bas.',
@@ -38,7 +39,7 @@ const loginSchema = z.object({
 	remember: z.boolean().optional(),
 })
 
-function fieldErrors(error: z.ZodError): Record<string, string> {
+export function fieldErrors(error: z.ZodError): Record<string, string> {
 	const out: Record<string, string> = {}
 	for (const issue of error.issues) {
 		const k = String(issue.path[0] ?? 'form')
@@ -76,6 +77,8 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 				[username, email, displayName, passwordHash],
 			)
 			await createSession(req, reply, rows[0].id, remember ?? false)
+			await logEvent(req, 'register', { userId: rows[0].id, meta: { username } })
+			await touchActivity(rows[0].id)
 			return reply.code(201).send({ user: publicUser(rows[0]) })
 		} catch (e: unknown) {
 			const err = e as { code?: string; constraint?: string }
@@ -98,6 +101,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 
 		const wait = retryAfter(req.ip, login)
 		if (wait > 0) {
+			await logEvent(req, 'login.throttled', { meta: { login: login.slice(0, 100), retryAfter: wait } })
 			reply.header('Retry-After', String(wait))
 			return reply.code(429).send({
 				error: 'throttled',
@@ -116,20 +120,29 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 
 		if (!ok) {
 			recordFailure(req.ip, login)
+			await logEvent(req, 'login.failure', {
+				userId: user?.id ?? null,
+				meta: { login: login.slice(0, 100), reason: user ? 'wrong_password' : 'unknown_user' },
+			})
 			return reply.code(401).send({ error: 'invalid_credentials', message: 'Identifiant ou mot de passe incorrect.' })
 		}
 		recordSuccess(req.ip, login)
 		if (user.status !== 'active') {
+			await logEvent(req, 'login.failure', { userId: user.id, meta: { login: user.username, reason: 'disabled' } })
 			return reply.code(403).send({ error: 'disabled', message: 'Ce compte est désactivé. Contactez l’administrateur.' })
 		}
 
 		await pool.query('UPDATE users SET last_login_at = now(), last_seen_at = now() WHERE id = $1', [user.id])
 		await createSession(req, reply, user.id, remember ?? false)
+		await logEvent(req, 'login.success', { userId: user.id, meta: { username: user.username, remember: remember ?? false } })
+		await touchActivity(user.id)
 		return { user: publicUser({ ...user, last_login_at: new Date() }) }
 	})
 
 	app.post('/api/auth/logout', async (req, reply) => {
+		const user = await currentUser(req)
 		await destroySession(req, reply)
+		if (user) await logEvent(req, 'logout', { userId: user.id, meta: { username: user.username } })
 		return { ok: true }
 	})
 

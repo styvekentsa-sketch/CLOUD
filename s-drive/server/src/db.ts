@@ -39,6 +39,33 @@ const migrations: string[] = [
 	CREATE INDEX sessions_user_idx ON sessions (user_id);
 	CREATE INDEX sessions_expires_idx ON sessions (expires_at);
 	`,
+
+	// 2 — journal de sécurité, activité quotidienne, préférences (disposition du tableau de bord)
+	`
+	ALTER TABLE users ADD COLUMN preferences jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+	-- Pas de clé étrangère sur user_id : l'historique survit à la suppression d'un compte
+	CREATE TABLE events (
+		id          bigserial PRIMARY KEY,
+		type        text NOT NULL,
+		user_id     uuid,
+		actor_id    uuid,
+		ip          text,
+		user_agent  text,
+		meta        jsonb NOT NULL DEFAULT '{}'::jsonb,
+		created_at  timestamptz NOT NULL DEFAULT now()
+	);
+	CREATE INDEX events_created_idx ON events (created_at DESC);
+	CREATE INDEX events_type_created_idx ON events (type, created_at DESC);
+	CREATE INDEX events_user_idx ON events (user_id, created_at DESC);
+
+	CREATE TABLE user_daily_activity (
+		user_id  uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		day      date NOT NULL,
+		PRIMARY KEY (user_id, day)
+	);
+	CREATE INDEX user_daily_activity_day_idx ON user_daily_activity (day);
+	`,
 ]
 
 export async function migrate(): Promise<void> {

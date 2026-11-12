@@ -19,6 +19,10 @@ export const config = {
 	port: Number(env('PORT', '3000')),
 	databaseUrl: env('DATABASE_URL'),
 	appName: env('APP_NAME', 'S-Drive'),
+	// Fuseau horaire des statistiques (jours, heures d'activité)
+	timezone: env('DISPLAY_TIMEZONE', 'Europe/Paris'),
+	// Conservation du journal de sécurité
+	eventRetentionDays: Number(env('EVENT_RETENTION_DAYS', '365')),
 
 	registrationEnabled: bool('REGISTRATION_ENABLED', true),
 	passwordMinLength: Number(env('PASSWORD_MIN_LENGTH', '12')),

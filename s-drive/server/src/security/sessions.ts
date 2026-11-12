@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { pool } from '../db.js'
 import { config } from '../config.js'
+import { touchActivity } from './events.js'
 
 export const COOKIE = 'sdrive_session'
 
@@ -54,6 +55,7 @@ export async function currentUser(req: FastifyRequest): Promise<SessionUser | nu
 	if (Date.now() - new Date(row.seen).getTime() > 60_000) {
 		await pool.query('UPDATE sessions SET last_seen_at = now() WHERE id = $1', [row.session_id])
 		await pool.query('UPDATE users SET last_seen_at = now() WHERE id = $1', [row.id])
+		await touchActivity(row.id)
 	}
 	return row
 }

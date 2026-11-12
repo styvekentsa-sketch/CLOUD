@@ -3,6 +3,7 @@ import { config } from './config.js'
 import { migrate, pool } from './db.js'
 import { hashPassword } from './security/password.js'
 import { purgeExpiredSessions } from './security/sessions.js'
+import { purgeOldEvents } from './security/events.js'
 import { prune } from './security/throttle.js'
 
 /** Crée le compte administrateur au premier démarrage (aucun admin en base). */
@@ -30,6 +31,7 @@ async function main(): Promise<void> {
 	setInterval(() => {
 		prune()
 		purgeExpiredSessions().catch((e) => app.log.error(e))
+		purgeOldEvents().catch((e) => app.log.error(e))
 	}, 3600_000).unref()
 
 	const stop = async () => {

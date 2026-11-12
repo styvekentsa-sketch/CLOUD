@@ -2,6 +2,8 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
 import { authRoutes } from './routes/auth.js'
 import { adminRoutes } from './routes/admin.js'
+import { insightsRoutes } from './routes/insights.js'
+import { meRoutes } from './routes/me.js'
 
 export async function buildApp(): Promise<FastifyInstance> {
 	const app = Fastify({
@@ -12,6 +14,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 	})
 
 	await app.register(cookie)
+	app.decorateRequest('sdUser', null)
 
 	// JSON : un corps vide vaut {} (ex. déconnexion envoyée avec Content-Type: application/json)
 	app.removeContentTypeParser('application/json')
@@ -67,5 +70,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 	app.get('/api/health', async () => ({ ok: true }))
 	await app.register(authRoutes)
 	await app.register(adminRoutes)
+	await app.register(insightsRoutes)
+	await app.register(meRoutes)
 	return app
 }
