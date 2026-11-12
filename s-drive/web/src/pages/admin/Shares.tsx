@@ -138,23 +138,23 @@ export function Shares() {
 
 			{list.error && <p className="form-error" role="alert">{list.error}</p>}
 			<div className={`table-card${list.loading && list.data ? ' is-refreshing' : ''}`}>
-				<table className="data-table">
+				<table className="data-table data-table--cards-lg">
 					<thead>
 						<tr>
 							<th aria-sort={aria('name')}><button type="button" onClick={() => sortBy('name')}>Élément partagé{mark('name')}</button></th>
-							<th>Propriétaire</th>
-							<th className="hide-lg" aria-sort={aria('created')}><button type="button" onClick={() => sortBy('created')}>Créé le{mark('created')}</button></th>
-							<th aria-sort={aria('expires')}><button type="button" onClick={() => sortBy('expires')}>Expiration{mark('expires')}</button></th>
-							<th>Mot de passe</th>
-							<th aria-sort={aria('views')}><button type="button" onClick={() => sortBy('views')} title="Trier par nombre de vues">Accès{mark('views')}</button></th>
-							<th>État</th>
-							<th><span className="sr-only">Actions</span></th>
+							<th className="c-xl">Propriétaire</th>
+							<th className="c-md hide-xxl" aria-sort={aria('created')}><button type="button" onClick={() => sortBy('created')}>Créé le{mark('created')}</button></th>
+							<th className="c-exp" aria-sort={aria('expires')}><button type="button" onClick={() => sortBy('expires')}>Expiration{mark('expires')}</button></th>
+							<th className="c-md">Mot de passe</th>
+							<th className="c-lg" aria-sort={aria('views')}><button type="button" onClick={() => sortBy('views')} title="Trier par nombre de vues">Accès{mark('views')}</button></th>
+							<th className="c-lg">État</th>
+							<th className="c-act"><span className="sr-only">Actions</span></th>
 						</tr>
 					</thead>
 					<tbody>
 						{shares.map((s) => (
 							<tr key={s.id} className={s.status !== 'active' ? 'row-dim' : undefined}>
-								<td>
+								<td className="cell-primary">
 									<div className="item-cell">
 										<span className="item-icon">{s.itemType === 'folder' ? <IconFolder size={18} /> : <IconFile size={18} />}</span>
 										<div>
@@ -163,24 +163,24 @@ export function Shares() {
 										</div>
 									</div>
 								</td>
-								<td>
+								<td data-label="Propriétaire">
 									<div className="user-cell">
 										<Avatar name={s.owner.displayName} seed={s.owner.username} size={28} />
 										<div><strong>{s.owner.displayName}</strong><span className="muted">@{s.owner.username}</span></div>
 									</div>
 								</td>
-								<td className="hide-lg muted nowrap" title={dateTime(s.createdAt)}>{date(s.createdAt)}</td>
-								<td className="nowrap"><Expiry s={s} /></td>
-								<td>
+								<td className="hide-xxl muted nowrap" data-label="Créé le" title={dateTime(s.createdAt)}>{date(s.createdAt)}</td>
+								<td className="nowrap" data-label="Expiration"><Expiry s={s} /></td>
+								<td data-label="Mot de passe">
 									{s.protected
 										? <Badge tone="good" icon={<IconLock size={13} />}>Oui</Badge>
 										: <Badge tone="warning" icon={<IconUnlock size={13} />}>Non</Badge>}
 								</td>
-								<td className="access-cell" title={s.lastAccessAt ? `Dernier accès ${ago(s.lastAccessAt)}` : 'Jamais ouvert'}>
+								<td className="access-cell" data-label="Accès" title={s.lastAccessAt ? `Dernier accès ${ago(s.lastAccessAt)}` : 'Jamais ouvert'}>
 									<span aria-label={`${s.views} vues`}><IconEye size={15} /> {num(s.views)}</span>
 									<span aria-label={`${s.downloads} téléchargements`}><IconDownload size={15} /> {num(s.downloads)}</span>
 								</td>
-								<td className="state-cell">
+								<td className="state-cell" data-label="État">
 									<StatusBadge s={s} />
 									{s.status === 'revoked' && s.revokedBy && (
 										<span className="muted revoked-by">par {s.revokedBy.displayName}, {ago(s.revokedAt)}</span>

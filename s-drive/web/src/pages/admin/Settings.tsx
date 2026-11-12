@@ -98,18 +98,18 @@ function Invitations({ active }: { active: boolean }) {
 				<button type="button" className="btn btn-secondary" onClick={() => setOpen(true)}><IconPlus size={18} /> Créer une invitation</button>
 			</div>
 			{list.length > 0 && (
-				<table className="data-table invites-table">
-					<thead><tr><th>Destinataire</th><th>Créée</th><th>Expire</th><th>État</th><th><span className="sr-only">Actions</span></th></tr></thead>
+				<table className="data-table data-table--cards invites-table">
+					<thead><tr><th>Destinataire</th><th className="c-xl">Créée</th><th className="c-md">Expire</th><th className="c-lg">État</th><th className="c-act"><span className="sr-only">Actions</span></th></tr></thead>
 					<tbody>
 						{list.slice(0, 8).map((i) => (
 							<tr key={i.id}>
-								<td>
+								<td className="cell-primary">
 									<strong>{i.email ?? 'Toute personne ayant le lien'}</strong>
 									{i.note && <span className="muted invite-sub">{i.note}</span>}
 								</td>
-								<td className="muted nowrap" title={dateTime(i.createdAt)}>{ago(i.createdAt)}{i.createdBy ? ` · ${i.createdBy}` : ''}</td>
-								<td className="muted nowrap">{date(i.expiresAt)}</td>
-								<td className="nowrap">
+								<td className="muted nowrap" data-label="Créée" title={dateTime(i.createdAt)}>{ago(i.createdAt)}{i.createdBy ? ` · ${i.createdBy}` : ''}</td>
+								<td className="muted nowrap" data-label="Expire">{date(i.expiresAt)}</td>
+								<td className="nowrap" data-label="État">
 									<Badge tone={tone[i.state]}>{label[i.state]}</Badge>
 									{i.usedBy && <span className="muted invite-sub">par @{i.usedBy.username}</span>}
 								</td>

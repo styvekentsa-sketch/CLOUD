@@ -304,44 +304,45 @@ export function Users() {
 
 			{error && <p className="form-error" role="alert">{error}</p>}
 			<div className={`table-card${loading && data ? ' is-refreshing' : ''}`}>
-				<table className="data-table">
+				<table className="data-table data-table--cards">
 					<thead>
 						<tr>
 							<th aria-sort={ariaSort('name')}><button type="button" onClick={() => sortBy('name')}>Utilisateur{sortMark('name')}</button></th>
-							<th className="hide-md">E-mail</th>
-							<th>Rôle</th>
-							<th>Statut</th>
-							<th aria-sort={ariaSort('storage')}><button type="button" onClick={() => sortBy('storage')}>Stockage{sortMark('storage')}</button></th>
-							<th aria-sort={ariaSort('lastSeen')}><button type="button" onClick={() => sortBy('lastSeen')}>Activité{sortMark('lastSeen')}</button></th>
-							<th className="hide-md" aria-sort={ariaSort('created')}><button type="button" onClick={() => sortBy('created')}>Inscrit le{sortMark('created')}</button></th>
-							<th className="num hide-lg">Sessions</th>
-							<th><span className="sr-only">Actions</span></th>
+							<th className="c-pct hide-xl">E-mail</th>
+							<th className="c-role">Rôle</th>
+							<th className="c-status">Statut</th>
+							<th className="c-storage" aria-sort={ariaSort('storage')}><button type="button" onClick={() => sortBy('storage')}>Stockage{sortMark('storage')}</button></th>
+							<th className="c-activity" aria-sort={ariaSort('lastSeen')}><button type="button" onClick={() => sortBy('lastSeen')}>Activité{sortMark('lastSeen')}</button></th>
+							<th className="c-md hide-xxl" aria-sort={ariaSort('created')}><button type="button" onClick={() => sortBy('created')}>Inscrit le{sortMark('created')}</button></th>
+							<th className="num c-sm hide-xxl">Sessions</th>
+							<th className="c-xs"><span className="sr-only">Actions</span></th>
 						</tr>
 					</thead>
 					<tbody>
 						{users.map((u) => (
 							<tr key={u.id}>
-								<td>
-									<div className="user-cell">
+								<td className="cell-primary">
+									<div className="user-cell" title={`${u.displayName} — ${u.email}`}>
 										<Avatar name={u.displayName} seed={u.username} size={32} status={u.online ? 'online' : 'offline'} />
 										<div>
 											<strong>{u.displayName}{u.id === me?.id && <span className="muted"> (vous)</span>}</strong>
-											<span className="muted">@{u.username}</span>
+											<span className="muted u-handle">@{u.username}</span>
+											<span className="muted u-mail">{u.email}</span>
 										</div>
 									</div>
 								</td>
-								<td className="hide-md">{u.email}</td>
-								<td>{u.role === 'admin' ? <Badge tone="info">Administrateur</Badge> : <span className="muted">Utilisateur</span>}</td>
-								<td>{u.status === 'active' ? <Badge tone="good">Actif</Badge> : <Badge tone="warning">Désactivé</Badge>}</td>
-								<td className="storage-cell">
+								<td className="hide-xl" data-label="E-mail" title={u.email}>{u.email}</td>
+								<td data-label="Rôle">{u.role === 'admin' ? <span title="Administrateur"><Badge tone="info">Admin</Badge></span> : <span className="muted">Utilisateur</span>}</td>
+								<td data-label="Statut">{u.status === 'active' ? <Badge tone="good">Actif</Badge> : <Badge tone="warning">Désactivé</Badge>}</td>
+								<td className="storage-cell" data-label="Stockage">
 									<button type="button" className="storage-edit" onClick={() => setQuotaUser(u)}
 										title="Modifier le quota de stockage" aria-label={`Modifier le quota de ${u.displayName}`}>
 										<StorageBar used={u.storageUsed ?? 0} quota={u.storageQuota ?? null} compact />
 									</button>
 								</td>
-								<td className="nowrap">{u.online ? <Badge tone="good">En ligne</Badge> : <span className="muted">{u.lastSeenAt ? `Vu ${ago(u.lastSeenAt)}` : 'Jamais connecté'}</span>}</td>
-								<td className="hide-md muted">{date(u.createdAt)}</td>
-								<td className="num hide-lg">{u.sessions ?? 0}</td>
+								<td className="nowrap" data-label="Activité">{u.online ? <Badge tone="good">En ligne</Badge> : <span className="muted">{u.lastSeenAt ? `Vu ${ago(u.lastSeenAt)}` : 'Jamais connecté'}</span>}</td>
+								<td className="muted hide-xxl" data-label="Inscrit le">{date(u.createdAt)}</td>
+								<td className="num hide-xxl" data-label="Sessions">{u.sessions ?? 0}</td>
 								<td className="actions-cell">
 									<ActionMenu label={`Actions pour ${u.displayName}`} trigger={<IconMore />} actions={actionsFor(u)} />
 								</td>

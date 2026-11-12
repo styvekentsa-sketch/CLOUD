@@ -436,7 +436,7 @@
 
 /* Menu d'actions */
 .action-menu { position: relative; display: inline-block; }
-.action-menu-pop { min-width: 250px; }
+.action-menu-pop { min-width: 250px; max-width: calc(100vw - 16px); right: auto; z-index: 1000; overflow-y: auto; }
 .action-menu-pop hr { border: 0; border-top: 1px solid var(--border-card); margin: 4px 0; }
 .menu-item--danger { color: var(--critical-text); }
 
@@ -534,7 +534,6 @@
 /* Colonne « Stockage » du tableau des comptes (cliquable : ouvre le quota) */
 .storage-cell { min-width: 160px; width: 175px; }
 .data-table td.nowrap { white-space: nowrap; }
-@media (max-width: 1600px) { .hide-lg { display: none; } }
 .storage-edit {
 	display: block;
 	width: 100%;
@@ -852,3 +851,159 @@
 
 /* Champ verrouillé (ex. adresse imposée par une invitation) */
 .field-box input[readonly] { background: var(--bg-dark); color: var(--text-muted); cursor: default; }
+
+/* =============================================================================
+   Tableaux de données : largeurs fixes, texte tronqué proprement, puis mode
+   « cartes » sous 1200 px (aucun défilement horizontal, tous les champs visibles).
+   ============================================================================= */
+.data-table { table-layout: fixed; }
+.data-table th, .data-table td { overflow: hidden; text-overflow: ellipsis; }
+.data-table td { white-space: nowrap; }
+.data-table th > button { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.data-table td.actions-cell { overflow: visible; }
+.data-table .user-cell, .data-table .item-cell, .data-table .device-cell { min-width: 0; }
+.data-table .device-cell { flex-wrap: nowrap; }
+.data-table .device-cell > span:not(.badge) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.data-table td .badge { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* Largeurs de colonnes (la première colonne prend la place restante) */
+.c-xs { width: 56px; }
+.c-sm { width: 96px; }
+.c-md { width: 122px; }
+.c-lg { width: 150px; }
+.c-xl { width: 178px; }
+.c-act { width: 124px; }
+.c-pct { width: 26%; }
+.c-dev { width: 30%; }
+.data-table td.storage-cell { width: auto; min-width: 0; }
+
+/* Colonnes secondaires : masquées sous 1600 px en mode tableau */
+@media (max-width: 1599px) { .hide-lg { display: none; } }
+
+/* Mode cartes */
+@media (max-width: 1199px) {
+	.data-table--cards, .data-table--cards tbody { display: block; width: 100%; }
+	.data-table--cards thead { display: none; }
+	.data-table--cards tr {
+		position: relative;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 10px 18px;
+		padding: 14px 64px 14px 16px;
+		border-bottom: 1px solid var(--border-card);
+	}
+	.data-table--cards tbody tr:last-child { border-bottom: 0; }
+	.data-table--cards tbody tr:hover td { background: none; }
+	.data-table--cards tbody tr:hover { background: var(--surface-card-hover); }
+	.data-table--cards td, .data-table--cards td.hide-md, .data-table--cards td.hide-lg, .data-table--cards td.hide-xl, .data-table--cards td.hide-xxl {
+		display: block;
+		padding: 0;
+		border: 0;
+		min-width: 0;
+		white-space: normal;
+		overflow: visible;
+	}
+	.data-table--cards td[data-label]::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 3px;
+		font-size: 12px;
+		color: var(--text-muted);
+	}
+	.data-table--cards td.cell-primary { grid-column: 1 / -1; }
+	.data-table--cards td.actions-cell { position: absolute; top: 10px; right: 8px; width: auto; }
+	.data-table--cards td.table-empty { grid-column: 1 / -1; }
+	.data-table--cards td.storage-cell { max-width: 260px; }
+	.data-table--cards .storage-edit { margin: 0; padding: 0; }
+	.data-table--cards .revoked-by { display: inline; margin-left: 6px; }
+}
+@media (max-width: 480px) {
+	.data-table--cards tr { grid-template-columns: 1fr 1fr; padding-right: 56px; }
+}
+
+/* Barre du haut sur mobile : la liste d'applications rétrécit au lieu de pousser l'avatar */
+.header-start { flex: 1 1 auto; }
+.app-menu { flex: 1 1 auto; min-width: 0; }
+.header-end { flex: 0 0 auto; }
+
+/* Filtres : retour à la ligne quand la place manque (jamais de débordement) */
+.segmented { flex-wrap: wrap; max-width: 100%; }
+.toolbar .search { min-width: 0; }
+
+@media (max-width: 1599px) {
+	.data-table--cards-lg, .data-table--cards-lg tbody { display: block; width: 100%; }
+	.data-table--cards-lg thead { display: none; }
+	.data-table--cards-lg tr {
+		position: relative;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+		gap: 10px 18px;
+		padding: 14px 64px 14px 16px;
+		border-bottom: 1px solid var(--border-card);
+	}
+	.data-table--cards-lg tbody tr:last-child { border-bottom: 0; }
+	.data-table--cards-lg tbody tr:hover td { background: none; }
+	.data-table--cards-lg tbody tr:hover { background: var(--surface-card-hover); }
+	.data-table--cards-lg td, .data-table--cards-lg td.hide-md, .data-table--cards-lg td.hide-lg, .data-table--cards-lg td.hide-xl, .data-table--cards-lg td.hide-xxl {
+		display: block;
+		padding: 0;
+		border: 0;
+		min-width: 0;
+		white-space: normal;
+		overflow: visible;
+	}
+	.data-table--cards-lg td[data-label]::before {
+		content: attr(data-label);
+		display: block;
+		margin-bottom: 3px;
+		font-size: 12px;
+		color: var(--text-muted);
+	}
+	.data-table--cards-lg td.cell-primary { grid-column: 1 / -1; }
+	.data-table--cards-lg td.actions-cell { position: absolute; top: 10px; right: 8px; width: auto; }
+	.data-table--cards-lg td.table-empty { grid-column: 1 / -1; }
+	.data-table--cards-lg td.storage-cell { max-width: 260px; }
+	.data-table--cards-lg .storage-edit { margin: 0; padding: 0; }
+	.data-table--cards-lg .revoked-by { display: inline; margin-left: 6px; }
+}
+@media (max-width: 480px) {
+	.data-table--cards-lg tr { grid-template-columns: 1fr 1fr; padding-right: 56px; }
+}
+
+/* Largeurs propres à certaines colonnes */
+.c-role { width: 112px; }
+.c-status { width: 120px; }
+.c-storage { width: 172px; }
+.c-activity { width: 142px; }
+.c-ip { width: 158px; }
+.c-exp { width: 196px; }
+/* Paliers de masquage (mode tableau) : e-mail sous 1440 px, détails sous 1800 px */
+@media (max-width: 1439px) { .hide-xl { display: none; } }
+@media (max-width: 1799px) { .hide-xxl { display: none; } }
+/* L’e-mail passe sous le nom quand sa colonne est masquée */
+.u-mail { display: none; }
+@media (max-width: 1439px) { .u-mail { display: block; } .u-handle { display: none; } }
+@media (max-width: 1199px) { .u-mail { display: none; } .u-handle { display: block; } }
+
+/* Mode cartes : finitions (les deux variantes) */
+@media (max-width: 1599px) {
+	.data-table--cards-lg td[data-label]::before { font-family: var(--font); font-weight: 400; }
+	.data-table--cards-lg td.num { text-align: left; }
+	.data-table--cards-lg .device-cell { flex-wrap: wrap; }
+	.data-table--cards-lg td .badge { max-width: none; }
+}
+@media (max-width: 1199px) {
+	.data-table--cards td[data-label]::before { font-family: var(--font); font-weight: 400; }
+	.data-table--cards td.num { text-align: left; }
+	.data-table--cards .device-cell { flex-wrap: wrap; }
+	.data-table--cards .device-cell > span:not(.badge) { overflow: visible; }
+	.data-table--cards td .badge { max-width: none; }
+}
+
+/* Mobile : la liste d'applications défile ; un fondu signale la suite */
+@media (max-width: 700px) {
+	.app-menu {
+		-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+		mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+	}
+}

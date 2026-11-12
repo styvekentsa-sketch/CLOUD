@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { IconAlert } from './Icons'
 
 // --- Pastilles d'état : toujours icône + texte, jamais la couleur seule ----------
@@ -35,38 +36,95 @@ export function Segmented<T extends string | number>({ value, options, onChange,
 // --- Menu d'actions (⋯) -------------------------------------------------------------
 export type MenuAction = { label: string; icon?: ReactNode; danger?: boolean; disabled?: boolean; hint?: string; onSelect: () => void } | 'separator'
 
+/**
+ * Menu d'actions (⋯). Le menu est rendu dans une couche flottante attachée à <body>
+ * (portail) en position fixe : il n'est jamais rogné par un tableau, une carte ou une
+ * barre de défilement. Il s'ouvre vers le bas, ou vers le haut s'il manque de place,
+ * reste dans l'écran, se ferme au défilement / redimensionnement / Échap / clic ailleurs.
+ * Clavier : flèches haut/bas pour parcourir, Échap pour fermer (le focus revient au bouton).
+ */
 export function ActionMenu({ actions, label, trigger }: { actions: MenuAction[]; label: string; trigger: ReactNode }) {
 	const [open, setOpen] = useState(false)
-	const ref = useRef<HTMLDivElement>(null)
+	const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null)
+	const btn = useRef<HTMLButtonElement>(null)
+	const pop = useRef<HTMLDivElement>(null)
+
+	const close = useCallback((focusButton = false) => {
+		setOpen(false)
+		setPos(null)
+		if (focusButton) btn.current?.focus()
+	}, [])
+
+	// Placement calculé après rendu (on connaît alors la taille réelle du menu)
+	useLayoutEffect(() => {
+		if (!open || !btn.current || !pop.current) return
+		const margin = 8
+		const b = btn.current.getBoundingClientRect()
+		const w = pop.current.offsetWidth
+		const h = pop.current.scrollHeight
+		const vw = window.innerWidth
+		const vh = window.innerHeight
+		const below = vh - b.bottom - margin
+		const above = b.top - margin
+		const openUp = h > below && above > below
+		const maxHeight = Math.max(120, openUp ? above - 4 : below - 4)
+		const top = openUp ? Math.max(margin, b.top - 4 - Math.min(h, maxHeight)) : b.bottom + 4
+		const left = Math.min(Math.max(margin, b.right - w), vw - w - margin)
+		setPos({ top, left, maxHeight })
+		pop.current.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus()
+	}, [open])
+
 	useEffect(() => {
 		if (!open) return
-		const close = (e: MouseEvent | KeyboardEvent) => {
-			if (e instanceof KeyboardEvent ? e.key === 'Escape' : !ref.current?.contains(e.target as Node)) setOpen(false)
+		const onDown = (e: MouseEvent) => {
+			const t = e.target as Node
+			if (!pop.current?.contains(t) && !btn.current?.contains(t)) close()
 		}
-		document.addEventListener('mousedown', close)
-		document.addEventListener('keydown', close)
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') { e.preventDefault(); close(true); return }
+			if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+			const items = [...(pop.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])]
+			if (!items.length) return
+			e.preventDefault()
+			const i = items.indexOf(document.activeElement as HTMLButtonElement)
+			items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus()
+		}
+		// Défilement d'un conteneur ou de la page : le menu se fermerait loin de son bouton
+		const onScroll = (e: Event) => { if (!pop.current?.contains(e.target as Node)) close() }
+		const onResize = () => close()
+		document.addEventListener('mousedown', onDown)
+		document.addEventListener('keydown', onKey)
+		window.addEventListener('scroll', onScroll, true)
+		window.addEventListener('resize', onResize)
 		return () => {
-			document.removeEventListener('mousedown', close)
-			document.removeEventListener('keydown', close)
+			document.removeEventListener('mousedown', onDown)
+			document.removeEventListener('keydown', onKey)
+			window.removeEventListener('scroll', onScroll, true)
+			window.removeEventListener('resize', onResize)
 		}
-	}, [open])
+	}, [open, close])
+
 	return (
-		<div className="action-menu" ref={ref}>
-			<button type="button" className="icon-btn" aria-label={label} aria-haspopup="menu" aria-expanded={open}
-				onClick={() => setOpen((o) => !o)}>
+		<div className="action-menu">
+			<button ref={btn} type="button" className="icon-btn" aria-label={label} aria-haspopup="menu" aria-expanded={open}
+				onClick={() => (open ? close() : setOpen(true))}>
 				{trigger}
 			</button>
-			{open && (
-				<div className="popover action-menu-pop" role="menu">
+			{open && createPortal(
+				<div ref={pop} className="popover action-menu-pop" role="menu" aria-label={label}
+					style={pos
+						? { position: 'fixed', top: pos.top, left: pos.left, maxHeight: pos.maxHeight }
+						: { position: 'fixed', top: 0, left: 0, visibility: 'hidden' }}>
 					{actions.map((a, i) => a === 'separator'
 						? <hr key={`sep-${i}`} />
 						: (
 							<button key={a.label} type="button" role="menuitem" className={`menu-item${a.danger ? ' menu-item--danger' : ''}`}
-								disabled={a.disabled} title={a.hint} onClick={() => { setOpen(false); a.onSelect() }}>
+								disabled={a.disabled} title={a.hint} onClick={() => { close(true); a.onSelect() }}>
 								{a.icon}<span>{a.label}</span>
 							</button>
 						))}
-				</div>
+				</div>,
+				document.body,
 			)}
 		</div>
 	)
