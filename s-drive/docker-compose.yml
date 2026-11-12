@@ -37,6 +37,11 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost}
       ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-Administrateur}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      DEFAULT_QUOTA_GB: ${DEFAULT_QUOTA_GB:-5}
+      STORAGE_DIR: /srv/storage
+    volumes:
+      # Fichiers des utilisateurs, sur le disque de l'hôte (capacité mesurée par la console)
+      - ${STORAGE_PATH:-./storage}:/srv/storage
     depends_on:
       db:
         condition: service_healthy

@@ -15,6 +15,14 @@ function bool(name: string, fallback: boolean): boolean {
 	return ['1', 'true', 'yes', 'oui'].includes(v.toLowerCase())
 }
 
+/** « 5 » -> 5 Gio en octets ; « illimite » / « unlimited » -> null (pas de limite). */
+function parseQuota(v: string): number | null {
+	if (/^(illimit[eé]|unlimited|none|aucun)$/i.test(v.trim())) return null
+	const gb = Number(v.replace(',', '.'))
+	if (!Number.isFinite(gb) || gb < 0) throw new Error(`DEFAULT_QUOTA_GB invalide : ${v}`)
+	return Math.round(gb * 1024 ** 3)
+}
+
 export const config = {
 	port: Number(env('PORT', '3000')),
 	databaseUrl: env('DATABASE_URL'),
@@ -30,6 +38,10 @@ export const config = {
 	// Durée des sessions
 	sessionHours: Number(env('SESSION_HOURS', '12')),
 	rememberDays: Number(env('REMEMBER_DAYS', '30')),
+
+	// Stockage : dossier des fichiers (monté depuis le disque de l'hôte) et quota par défaut
+	storageDir: env('STORAGE_DIR', '/srv/storage'),
+	defaultQuotaBytes: parseQuota(env('DEFAULT_QUOTA_GB', '5')),
 
 	// Compte administrateur créé au premier démarrage s'il n'en existe aucun
 	admin: {

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { SecurityEvent } from '../../api'
 import type { Tone } from '../../components/ui'
+import { bytes } from '../../format'
 import {
 	IconAlert, IconEdit, IconLock, IconLogin, IconLogout, IconShield, IconTrash, IconUserPlus, IconX,
 } from '../../components/Icons'
@@ -47,7 +48,11 @@ export function eventSentence(e: SecurityEvent): string {
 		case 'session.revoke': return `Une session de ${who(e)} fermée${actor}`
 		case 'user.update': {
 			const c = (e.meta.changes ?? {}) as Record<string, string>
+			const quota = 'storageQuota' in c
+				? `quota de stockage ${c.storageQuota === null ? 'illimité' : `fixé à ${bytes(Number(c.storageQuota))}`}`
+				: false
 			const parts = [
+				quota,
 				c.role === 'admin' && 'promu administrateur',
 				c.role === 'user' && 'n’est plus administrateur',
 				c.status === 'disabled' && 'désactivé',

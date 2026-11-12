@@ -66,6 +66,15 @@ const migrations: string[] = [
 	);
 	CREATE INDEX user_daily_activity_day_idx ON user_daily_activity (day);
 	`,
+
+	// 3 — stockage : quota par compte (NULL = illimité) et espace utilisé, en octets
+	`
+	ALTER TABLE users ADD COLUMN storage_quota bigint DEFAULT 5368709120
+		CHECK (storage_quota IS NULL OR storage_quota >= 0);
+	ALTER TABLE users ADD COLUMN storage_used bigint NOT NULL DEFAULT 0
+		CHECK (storage_used >= 0);
+	CREATE INDEX users_storage_used_idx ON users (storage_used DESC);
+	`,
 ]
 
 export async function migrate(): Promise<void> {

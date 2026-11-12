@@ -5,11 +5,13 @@
 // =============================================================================
 import { createContext, useContext, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import type { AdminUser, Overview, SecurityEvent, SystemInfo, WidgetSize } from '../../api'
+import type { AdminUser, Overview, SecurityEvent, StorageInfo, SystemInfo, WidgetSize } from '../../api'
+import { StorageBar } from '../../components/Storage'
+import { StorageGauge } from '../../components/charts/Gauge'
 import { Avatar } from '../../components/Avatar'
 import { ColumnChart, Heatmap, LineChart, SegmentedBar, Sparkline } from '../../components/charts/Charts'
 import {
-	IconActivity, IconAlert, IconChevronRight, IconClock, IconDevice, IconLogin, IconServer, IconShield,
+	IconActivity, IconAlert, IconChevronRight, IconClock, IconDevice, IconLogin, IconPie, IconServer, IconShield,
 	IconUser, IconUserPlus,
 } from '../../components/Icons'
 import { Badge } from '../../components/ui'
@@ -22,9 +24,10 @@ export type DashboardData = {
 	users: AdminUser[] | null
 	events: SecurityEvent[] | null
 	system: SystemInfo | null
+	storage: StorageInfo | null
 	days: number
 }
-export const DashboardDataContext = createContext<DashboardData>({ overview: null, users: null, events: null, system: null, days: 30 })
+export const DashboardDataContext = createContext<DashboardData>({ overview: null, users: null, events: null, system: null, storage: null, days: 30 })
 const useDash = () => useContext(DashboardDataContext)
 
 // Couleurs des séries (validées daltonisme + contraste, thème clair et sombre)
@@ -362,6 +365,69 @@ export const WIDGETS: WidgetDef[] = [
 			)
 		},
 	},
+
+	// ---------------------------------------------------------------- Stockage
+	{
+		id: 'storage-global', title: 'Stockage global', kind: 'chart', icon: <IconPie size={18} />,
+		description: 'Espace occupé par les fichiers S-Drive et capacité totale du disque du serveur.',
+		sizes: [4, 6, 8], defaultSize: 4, link: { to: '/tableau-de-bord/comptes?tri=stockage', label: 'Quotas' },
+		Body: () => {
+			const { storage: s } = useDash()
+			if (!s) return <Loading />
+			if (!s.disk) return <Empty>Capacité du disque indisponible (dossier de stockage non monté).</Empty>
+			const diskPct = s.disk.used / s.disk.total
+			const tone = diskPct >= 0.9 ? 'critical' : diskPct >= 0.8 ? 'warning' : 'good'
+			const toneLabel = diskPct >= 0.9 ? 'Disque presque plein' : diskPct >= 0.8 ? 'Espace disque faible' : 'Espace disque correct'
+			return (
+				<div className="storage-global">
+					<StorageGauge total={s.disk.total} sdrive={s.used} other={Math.max(0, s.disk.used - s.used)} />
+					<div className="storage-global-meta">
+						<Badge tone={tone}>{toneLabel}</Badge>
+						<dl className="w-kv">
+							<dt>Quotas attribués</dt>
+							<dd className="dd-inline">
+								{bytes(s.allocated)}
+								{s.unlimitedUsers > 0 && <span className="muted">+ {s.unlimitedUsers} illimité{s.unlimitedUsers > 1 ? 's' : ''}</span>}
+							</dd>
+							<dt>Comptes pleins</dt>
+							<dd className="dd-inline">
+								{s.fullUsers > 0 ? <Badge tone="critical">{s.fullUsers}</Badge> : <span>0</span>}
+								{s.nearFullUsers > 0 && <span className="muted">· {s.nearFullUsers} à plus de 80 %</span>}
+							</dd>
+						</dl>
+						{s.allocated > s.disk.free && (
+							<p className="form-warning"><IconAlert size={16} /><span>Les quotas attribués dépassent l’espace libre du disque.</span></p>
+						)}
+					</div>
+				</div>
+			)
+		},
+	},
+	{
+		id: 'storage-top', title: 'Plus gros consommateurs', kind: 'list', icon: <IconUser size={18} />,
+		description: 'Les 5 comptes qui occupent le plus d’espace, avec leur quota.',
+		sizes: [4, 6, 8, 12], defaultSize: 8, link: { to: '/tableau-de-bord/comptes?tri=stockage', label: 'Tous les comptes' },
+		Body: () => {
+			const { storage: s } = useDash()
+			if (!s) return <Loading />
+			if (!s.top.length) return <Empty>Aucun fichier stocké pour l’instant : le classement apparaîtra dès les premiers envois.</Empty>
+			return (
+				<ol className="rank">
+					{s.top.map((u, i) => (
+						<li key={u.id} className="rank-row">
+							<span className="rank-n" aria-label={`Rang ${i + 1}`}>{i + 1}</span>
+							<Avatar name={u.displayName} seed={u.username} size={32} />
+							<div className="rank-who">
+								<strong>{u.displayName}</strong>
+								<span className="muted">@{u.username}{u.status === 'disabled' ? ' · désactivé' : ''}</span>
+							</div>
+							<div className="rank-bar"><StorageBar used={u.used} quota={u.quota} /></div>
+						</li>
+					))}
+				</ol>
+			)
+		},
+	},
 ]
 
 export const WIDGET_MAP = new Map(WIDGETS.map((w) => [w.id, w]))
@@ -374,6 +440,8 @@ export const DEFAULT_LAYOUT: { id: string; size: WidgetSize }[] = [
 	{ id: 'kpi-online', size: 3 },
 	{ id: 'chart-logins', size: 8 },
 	{ id: 'roles', size: 4 },
+	{ id: 'storage-global', size: 4 },
+	{ id: 'storage-top', size: 8 },
 	{ id: 'chart-signups', size: 6 },
 	{ id: 'heatmap', size: 6 },
 	{ id: 'security', size: 6 },

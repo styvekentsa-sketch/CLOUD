@@ -16,9 +16,9 @@ async function ensureAdmin(): Promise<void> {
 		return
 	}
 	await pool.query(
-		`INSERT INTO users (username, email, display_name, password_hash, role)
-		 VALUES (lower($1), lower($2), $3, $4, 'admin')`,
-		[username, email, displayName, await hashPassword(password)],
+		`INSERT INTO users (username, email, display_name, password_hash, role, storage_quota)
+		 VALUES (lower($1), lower($2), $3, $4, 'admin', $5)`,
+		[username, email, displayName, await hashPassword(password), config.defaultQuotaBytes],
 	)
 	console.log(`[admin] compte administrateur « ${username} » créé`)
 }

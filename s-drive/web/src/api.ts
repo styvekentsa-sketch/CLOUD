@@ -11,7 +11,14 @@ export type User = {
 	lastLoginAt: string | null
 }
 
-export type AdminUser = User & { status: 'active' | 'disabled'; online: boolean; lastSeenAt?: string | null; sessions?: number }
+export type AdminUser = User & {
+	status: 'active' | 'disabled'
+	online: boolean
+	lastSeenAt?: string | null
+	sessions?: number
+	storageUsed?: number
+	storageQuota?: number | null
+}
 
 export type ServerConfig = {
 	appName: string
@@ -75,7 +82,7 @@ export const api = {
 			'GET', `/api/admin/users${qs(filters)}`),
 	createUser: (data: { username: string; email: string; displayName: string; password: string; role: 'user' | 'admin' }) =>
 		request<{ user: AdminUser }>('POST', '/api/admin/users', data),
-	updateUser: (id: string, changes: { role?: 'user' | 'admin'; status?: 'active' | 'disabled'; displayName?: string }) =>
+	updateUser: (id: string, changes: { role?: 'user' | 'admin'; status?: 'active' | 'disabled'; displayName?: string; storageQuota?: number | null }) =>
 		request<{ user: AdminUser }>('PATCH', `/api/admin/users/${encodeURIComponent(id)}`, changes),
 	deleteUser: (id: string) => request<{ ok: true }>('DELETE', `/api/admin/users/${encodeURIComponent(id)}`),
 	revokeUserSessions: (id: string) =>
@@ -86,6 +93,8 @@ export const api = {
 	events: (filters: Record<string, string | number | undefined> = {}) =>
 		request<{ events: SecurityEvent[]; nextBefore: number | null }>('GET', `/api/admin/events${qs(filters)}`),
 	system: () => request<SystemInfo>('GET', '/api/admin/system'),
+	storage: () => request<StorageInfo>('GET', '/api/admin/storage'),
+	myStorage: () => request<{ used: number; quota: number | null }>('GET', '/api/me/storage'),
 	preferences: () => request<{ preferences: Preferences }>('GET', '/api/me/preferences'),
 	savePreferences: (p: Preferences) => request<{ preferences: Preferences }>('PUT', '/api/me/preferences', p),
 }
@@ -165,4 +174,16 @@ export type SystemInfo = {
 export type WidgetSize = 3 | 4 | 6 | 8 | 12
 export type Preferences = {
 	dashboard?: { widgets: { id: string; size: WidgetSize }[]; days: 7 | 30 | 90 }
+}
+
+export type StorageInfo = {
+	used: number
+	allocated: number
+	unlimitedUsers: number
+	fullUsers: number
+	nearFullUsers: number
+	users: number
+	defaultQuota: number | null
+	disk: { total: number; free: number; used: number; path: string } | null
+	top: { id: string; username: string; displayName: string; role: string; status: string; used: number; quota: number | null }[]
 }

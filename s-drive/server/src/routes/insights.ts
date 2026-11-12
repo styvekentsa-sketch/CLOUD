@@ -5,6 +5,7 @@ import { pool } from '../db.js'
 import { config } from '../config.js'
 import { requireAdmin } from '../security/guards.js'
 import { activeBlocks } from '../security/throttle.js'
+import { diskUsage } from '../storage/quota.js'
 
 const startedAt = new Date()
 const periodQuery = z.object({ days: z.coerce.number().int().refine((d) => [7, 30, 90].includes(d)).default(30) })
@@ -173,6 +174,47 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 				actor: e.actor_id ? { id: e.actor_id, username: e.actor_username, displayName: e.actor_display_name } : null,
 			})),
 			nextBefore: more ? Number(rows[limit - 1].id) : null,
+		}
+	})
+
+	// Stockage : espace utilisé par S-Drive, capacité du disque, plus gros consommateurs
+	app.get('/api/admin/storage', async () => {
+		const [totals, top] = await Promise.all([
+			pool.query(
+				`SELECT coalesce(sum(storage_used), 0)::bigint AS used,
+				        coalesce(sum(storage_quota) FILTER (WHERE storage_quota IS NOT NULL), 0)::bigint AS allocated,
+				        count(*) FILTER (WHERE storage_quota IS NULL)::int AS unlimited,
+				        count(*) FILTER (WHERE storage_quota IS NOT NULL AND storage_used >= storage_quota)::int AS full,
+				        count(*) FILTER (WHERE storage_quota IS NOT NULL AND storage_quota > 0
+				                         AND storage_used >= 0.8 * storage_quota AND storage_used < storage_quota)::int AS near_full,
+				        count(*)::int AS users
+				   FROM users`,
+			),
+			pool.query(
+				`SELECT id, username, display_name, role, status, storage_used, storage_quota
+				   FROM users WHERE storage_used > 0
+				  ORDER BY storage_used DESC, lower(display_name) LIMIT 5`,
+			),
+		])
+		const t = totals.rows[0]
+		return {
+			used: Number(t.used),
+			allocated: Number(t.allocated),
+			unlimitedUsers: t.unlimited,
+			fullUsers: t.full,
+			nearFullUsers: t.near_full,
+			users: t.users,
+			defaultQuota: config.defaultQuotaBytes,
+			disk: diskUsage(),
+			top: top.rows.map((u) => ({
+				id: u.id,
+				username: u.username,
+				displayName: u.display_name,
+				role: u.role,
+				status: u.status,
+				used: Number(u.storage_used),
+				quota: u.storage_quota === null ? null : Number(u.storage_quota),
+			})),
 		}
 	})
 

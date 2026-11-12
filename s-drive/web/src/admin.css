@@ -513,3 +513,110 @@
 	.page-head { align-items: flex-start; }
 	.search { max-width: none; }
 }
+
+/* =============================================================================
+   Stockage & quotas
+   ============================================================================= */
+
+/* Barre « Utilisé / Quota » : remplissage en couleur de série, état en texte */
+.sbar { display: flex; flex-direction: column; gap: 4px; min-width: 0; width: 100%; }
+.sbar-track { height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; }
+.sbar-track > span { display: block; height: 100%; min-width: 0; border-radius: 3px; background: var(--series-1); }
+.sbar--near .sbar-track > span { background: var(--warning); }
+.sbar--full .sbar-track > span { background: var(--critical); }
+.sbar--unlimited .sbar-track { background: repeating-linear-gradient(90deg, var(--grid) 0 6px, transparent 6px 10px); }
+.sbar-text { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sbar-state { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; }
+.sbar--near .sbar-state { color: var(--warning-text); }
+.sbar--full .sbar-state { color: var(--critical-text); }
+.sbar--compact .sbar-text { font-size: 12.5px; }
+
+/* Colonne « Stockage » du tableau des comptes (cliquable : ouvre le quota) */
+.storage-cell { min-width: 160px; width: 175px; }
+.data-table td.nowrap { white-space: nowrap; }
+@media (max-width: 1600px) { .hide-lg { display: none; } }
+.storage-edit {
+	display: block;
+	width: 100%;
+	padding: 6px 8px;
+	margin: -6px -8px;
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	background: none;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.storage-edit:hover { border-color: var(--border-card); background: var(--bg-main); }
+
+/* Navigation de « Fichiers » */
+.nav-storage { align-items: center; }
+.nav-storage .sbar { flex: 1; }
+
+/* Dialogue de quota */
+.quota-now, .quota-preview { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; font-size: 13px; }
+.quota-preview { margin: 16px 0 8px; padding: 10px 12px; border-radius: var(--radius); background: var(--bg-dark); }
+.quota-label { margin: 0 0 8px !important; font-weight: 600; }
+.quota-custom { display: flex; gap: 8px; margin-top: 12px; }
+.quota-custom input, .quota-custom select {
+	height: 40px;
+	padding: 0 12px;
+	border: 2px solid var(--border-strong);
+	border-radius: var(--radius);
+	background: var(--bg-main);
+}
+.quota-custom input { flex: 1; min-width: 0; }
+.quota-custom input:focus, .quota-custom select:focus { border-color: var(--primary); outline: none; }
+.quota-hint { margin: 8px 0 0 !important; font-size: 13px; }
+.dialog .segmented { flex-wrap: wrap; }
+.form-warning {
+	display: flex;
+	gap: 8px;
+	margin: 8px 0 0;
+	padding: 8px 10px;
+	border-radius: var(--radius);
+	background: var(--warning-bg);
+	color: var(--warning-text);
+	font-size: 13.5px;
+}
+.form-warning svg { flex: 0 0 auto; margin-top: 1px; }
+
+/* Jauge du disque */
+.storage-global { display: flex; flex-direction: column; gap: 12px; }
+.size-6 .storage-global, .size-8 .storage-global { flex-direction: row; align-items: center; gap: 24px; }
+.size-6 .storage-global > *, .size-8 .storage-global > * { flex: 1; min-width: 0; }
+.storage-global-meta { display: flex; flex-direction: column; gap: 10px; }
+.storage-global-meta .badge { align-self: flex-start; }
+.gauge { display: flex; flex-direction: column; gap: 10px; }
+.gauge-svg { width: 100%; max-width: 260px; margin: 0 auto; display: block; }
+.gauge-track { stroke: var(--grid); }
+.gauge-sdrive { stroke: var(--series-1); }
+.gauge-other { stroke: var(--neutral-mark); }
+.gauge-sdrive.is-hover, .gauge-other.is-hover { filter: brightness(1.2); }
+.gauge-value { fill: var(--text); font-size: 26px; font-weight: 650; }
+.gauge-caption { fill: var(--text-muted); font-size: 11px; }
+.gauge-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+.gauge-legend li { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 10px; }
+.gauge-legend strong { font-variant-numeric: tabular-nums; font-weight: 600; }
+.gauge-key--sdrive { background: var(--series-1); }
+.gauge-key--other { background: var(--neutral-mark); }
+.gauge-key--free { background: var(--grid); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.gauge-total { padding-top: 6px; border-top: 1px solid var(--border-card); }
+
+/* Classement des plus gros consommateurs */
+.rank { list-style: none; margin: 0 -8px; padding: 0; }
+.rank-row {
+	display: grid;
+	grid-template-columns: 22px 32px minmax(0, 1fr) minmax(140px, 1.2fr);
+	align-items: center;
+	gap: 10px;
+	padding: 7px 8px;
+	border-radius: var(--radius);
+}
+.rank-row:hover { background: var(--surface-card-hover); }
+.rank-n { font-weight: 700; color: var(--text-muted); text-align: center; font-variant-numeric: tabular-nums; }
+.rank-who { display: flex; flex-direction: column; min-width: 0; }
+.rank-who strong, .rank-who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-who span { font-size: 13px; }
+.size-4 .rank-row { grid-template-columns: 22px 32px minmax(0, 1fr); }
+.size-4 .rank-bar { grid-column: 3; }

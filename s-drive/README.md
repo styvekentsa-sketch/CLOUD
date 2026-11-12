@@ -13,6 +13,8 @@ docker compose up -d --build
 
 Ouvrir **http://localhost:8090**, ou depuis un autre appareil du Wi‑Fi `http://<IP-du-PC>:8090`.
 
+> Si `docker compose up --build` échoue avec « additional privileges requested: pass --allow=fs.read=… », construisez les images directement : `docker build -t s-drive/api:local server` et `docker build -t s-drive/web:local web`, puis `docker compose up -d --no-build`.
+
 Au premier démarrage, le compte administrateur est créé avec les valeurs `ADMIN_*` de `.env` (identifiant `admin`, mot de passe `ADMIN_PASSWORD`). Modifier ces valeurs ensuite ne change pas le compte existant.
 
 ## Ce que fait la version 1
@@ -27,6 +29,15 @@ Au premier démarrage, le compte administrateur est créé avec les valeurs `ADM
 | Interface | Même disposition que la version Nextcloud : barre du haut, navigation à gauche, thème sombre ou clair, tiroir de navigation sur mobile. |
 
 Les applications Fichiers, Photos, Activité, Vidéos, Audio et Application sont déjà en place dans le menu et affichent « Bientôt disponible ».
+
+## Stockage et quotas
+
+- Chaque compte a un **quota** (par défaut `DEFAULT_QUOTA_GB=5` dans `.env`, ou `illimite`) et un compteur d’**espace utilisé**.
+- Les fichiers sont stockés dans `STORAGE_PATH` (par défaut `./storage`, sur le disque du PC). La console mesure la capacité de ce disque.
+- **Console > Comptes** : colonne « Stockage » (Utilisé / Quota), tri par espace, action « Modifier le quota » (5 Go, 20 Go, 100 Go, Illimité ou personnalisé).
+- **Vue d’ensemble** : widgets « Stockage global » (jauge du disque) et « Plus gros consommateurs ».
+- Contrôle des envois : `server/src/storage/quota.ts`. `reserveSpace()` réserve l’espace en **une seule requête SQL conditionnelle** (deux envois simultanés ne peuvent pas dépasser le quota), sinon erreur 413 ; `releaseSpace()` libère. `POST /api/me/storage/check` permet de refuser un fichier trop gros **avant** de l’envoyer. La route d’envoi de fichiers (version « Fichiers ») devra appeler `reserveSpace()` avant toute écriture.
+- Un quota réduit sous l’espace déjà utilisé est accepté : les fichiers restent, les nouveaux envois sont refusés.
 
 ## Sécurité
 

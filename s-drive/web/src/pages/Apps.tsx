@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react'
+import { api } from '../api'
+import { StorageBar } from '../components/Storage'
 import { NavLink } from 'react-router-dom'
 import { AppShell, Soon } from '../components/AppShell'
 import {
@@ -31,7 +34,7 @@ function FilesNavigation() {
 			</ul>
 			<ul className="nav-list nav-list--bottom">
 				<li><NavLink to="/fichiers/corbeille" className={({ isActive }) => `nav-entry${isActive ? ' is-active' : ''}`}><IconTrash /> <span>Fichiers supprimés</span></NavLink></li>
-				<li><span className="nav-entry nav-entry--static"><IconPie /> <span>0 o utilisés</span></span></li>
+				<li><MyStorage /></li>
 				<li><button type="button" className="nav-entry" disabled title="Bientôt disponible"><IconSettings /> <span>Paramètres de Fichiers</span></button></li>
 			</ul>
 		</>
@@ -72,5 +75,19 @@ export function ComingSoon({ app }: { app: keyof typeof SOON }) {
 		<AppShell>
 			<Soon Icon={s.Icon} title={s.title} text={`${s.text} Disponible dans une prochaine version.`} />
 		</AppShell>
+	)
+}
+
+/** Espace de l'utilisateur, en bas de la navigation de « Fichiers ». */
+function MyStorage() {
+	const [s, setS] = useState<{ used: number; quota: number | null } | null>(null)
+	useEffect(() => {
+		api.myStorage().then(setS).catch(() => setS(null))
+	}, [])
+	return (
+		<div className="nav-entry nav-entry--static nav-storage">
+			<IconPie />
+			{s ? <StorageBar used={s.used} quota={s.quota} compact /> : <span>Stockage…</span>}
+		</div>
 	)
 }

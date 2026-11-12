@@ -71,10 +71,10 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
 		const passwordHash = await hashPassword(password)
 		try {
 			const { rows } = await pool.query(
-				`INSERT INTO users (username, email, display_name, password_hash, last_login_at)
-				 VALUES ($1, $2, $3, $4, now())
+				`INSERT INTO users (username, email, display_name, password_hash, last_login_at, storage_quota)
+				 VALUES ($1, $2, $3, $4, now(), $5)
 				 RETURNING id, username, email, display_name, role, status, created_at, last_login_at`,
-				[username, email, displayName, passwordHash],
+				[username, email, displayName, passwordHash, config.defaultQuotaBytes],
 			)
 			await createSession(req, reply, rows[0].id, remember ?? false)
 			await logEvent(req, 'register', { userId: rows[0].id, meta: { username } })
