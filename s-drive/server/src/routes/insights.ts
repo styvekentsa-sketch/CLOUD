@@ -126,7 +126,7 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 		limit: z.coerce.number().int().min(1).max(200).default(50),
 		before: z.coerce.number().int().positive().optional(),
 		type: z.string().regex(/^[a-z.]+$/).max(40).optional(),
-		group: z.enum(['auth', 'failures', 'accounts', 'sessions']).optional(),
+		group: z.enum(['auth', 'failures', 'accounts', 'sessions', 'shares']).optional(),
 		q: z.string().trim().max(100).optional(),
 	})
 	const GROUPS: Record<string, string[]> = {
@@ -134,6 +134,7 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 		failures: ['login.failure', 'login.throttled'],
 		accounts: ['user.create', 'user.update', 'user.delete', 'register'],
 		sessions: ['sessions.revoke', 'session.revoke', 'logout'],
+		shares: ['share.create', 'share.revoke'],
 	}
 
 	app.get('/api/admin/events', async (req, reply) => {

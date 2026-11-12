@@ -75,6 +75,30 @@ const migrations: string[] = [
 		CHECK (storage_used >= 0);
 	CREATE INDEX users_storage_used_idx ON users (storage_used DESC);
 	`,
+
+	// 4 — partages publics (liens). Le jeton du lien n'est jamais stocké en clair.
+	`
+	-- Un partage révoqué est conservé (traçabilité) avec la date et l'auteur de la révocation.
+	CREATE TABLE shares (
+		id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+		token_hash      text NOT NULL UNIQUE,
+		owner_id        uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		item_type       text NOT NULL CHECK (item_type IN ('file', 'folder')),
+		item_name       text NOT NULL,
+		item_path       text NOT NULL DEFAULT '',
+		password_hash   text,
+		expires_at      timestamptz,
+		created_at      timestamptz NOT NULL DEFAULT now(),
+		revoked_at      timestamptz,
+		revoked_by      uuid REFERENCES users(id) ON DELETE SET NULL,
+		views           integer NOT NULL DEFAULT 0 CHECK (views >= 0),
+		downloads       integer NOT NULL DEFAULT 0 CHECK (downloads >= 0),
+		last_access_at  timestamptz
+	);
+	CREATE INDEX shares_owner_idx ON shares (owner_id);
+	CREATE INDEX shares_active_idx ON shares (revoked_at, expires_at);
+	CREATE INDEX shares_created_idx ON shares (created_at DESC);
+	`,
 ]
 
 export async function migrate(): Promise<void> {

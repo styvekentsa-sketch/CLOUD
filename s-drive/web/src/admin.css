@@ -620,3 +620,49 @@
 .rank-who span { font-size: 13px; }
 .size-4 .rank-row { grid-template-columns: 22px 32px minmax(0, 1fr); }
 .size-4 .rank-bar { grid-column: 3; }
+
+/* =============================================================================
+   Partages publics
+   ============================================================================= */
+.share-alerts { display: flex; flex-wrap: wrap; gap: 10px; margin: -4px 0 14px; }
+.share-alert {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	background: var(--warning-bg);
+	color: var(--warning-text);
+	font-size: 14px;
+	cursor: pointer;
+}
+.share-alert:hover { border-color: var(--warning-text); }
+.share-alert--info { background: var(--neutral-bg); color: var(--text-muted); cursor: default; }
+.share-alert--info:hover { border-color: transparent; }
+.item-cell { display: flex; align-items: center; gap: 10px; min-width: 0; max-width: 340px; }
+.item-cell > div { display: flex; flex-direction: column; min-width: 0; }
+.item-cell strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-cell span { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-icon {
+	width: 32px; height: 32px;
+	flex: 0 0 auto;
+	display: grid; place-items: center;
+	border-radius: var(--radius);
+	background: var(--info-bg);
+	color: var(--info-text);
+}
+.row-dim td { opacity: 0.72; }
+.row-dim td.actions-cell, .row-dim td:nth-last-child(2) { opacity: 1; }
+.revoked-by { display: block; font-size: 12.5px; margin-top: 2px; }
+.expiry { display: inline-flex; align-items: center; gap: 6px; }
+.btn-danger-ghost { color: var(--critical-text); }
+.btn-danger-ghost:hover:not(:disabled) { background: var(--critical-bg); }
+.badge svg { flex: 0 0 auto; }
+.kpi-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 10px; }
+.access-cell { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.access-cell span { display: inline-flex; align-items: center; gap: 4px; margin-right: 12px; }
+.access-cell span:last-child { margin-right: 0; }
+.access-cell svg { color: var(--text-muted); }
+.state-cell { min-width: 110px; max-width: 240px; }
+.revoked-by { white-space: normal; line-height: 1.35; }

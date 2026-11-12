@@ -95,6 +95,9 @@ export const api = {
 	system: () => request<SystemInfo>('GET', '/api/admin/system'),
 	storage: () => request<StorageInfo>('GET', '/api/admin/storage'),
 	myStorage: () => request<{ used: number; quota: number | null }>('GET', '/api/me/storage'),
+	shares: (filters: Record<string, string> = {}) => request<{ shares: Share[] }>('GET', `/api/admin/shares${qs(filters)}`),
+	shareStats: () => request<ShareStats>('GET', '/api/admin/shares/stats'),
+	revokeShare: (id: string) => request<{ ok: true }>('DELETE', `/api/admin/shares/${encodeURIComponent(id)}`),
 	preferences: () => request<{ preferences: Preferences }>('GET', '/api/me/preferences'),
 	savePreferences: (p: Preferences) => request<{ preferences: Preferences }>('PUT', '/api/me/preferences', p),
 }
@@ -186,4 +189,34 @@ export type StorageInfo = {
 	defaultQuota: number | null
 	disk: { total: number; free: number; used: number; path: string } | null
 	top: { id: string; username: string; displayName: string; role: string; status: string; used: number; quota: number | null }[]
+}
+
+export type Share = {
+	id: string
+	itemType: 'file' | 'folder'
+	itemName: string
+	itemPath: string
+	createdAt: string
+	expiresAt: string | null
+	revokedAt: string | null
+	revokedBy: { username: string; displayName: string } | null
+	protected: boolean
+	views: number
+	downloads: number
+	lastAccessAt: string | null
+	status: 'active' | 'expired' | 'revoked'
+	owner: { id: string; username: string; displayName: string }
+}
+
+export type ShareStats = {
+	active: number
+	unprotected: number
+	noExpiry: number
+	expiringSoon: number
+	expired: number
+	revoked: number
+	createdLast7Days: number
+	views: number
+	downloads: number
+	owners: number
 }

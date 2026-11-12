@@ -4,10 +4,10 @@ import { IconAlert } from './Icons'
 // --- Pastilles d'état : toujours icône + texte, jamais la couleur seule ----------
 export type Tone = 'good' | 'warning' | 'critical' | 'neutral' | 'info'
 
-export function Badge({ tone = 'neutral', children }: { tone?: Tone; children: ReactNode }) {
+export function Badge({ tone = 'neutral', icon, children }: { tone?: Tone; icon?: ReactNode; children: ReactNode }) {
 	return (
 		<span className={`badge badge--${tone}`}>
-			<span className="badge-dot" aria-hidden="true" />
+			{icon ?? <span className="badge-dot" aria-hidden="true" />}
 			{children}
 		</span>
 	)

@@ -11,6 +11,7 @@ import { Users } from './pages/admin/Users'
 import { Sessions } from './pages/admin/Sessions'
 import { Journal } from './pages/admin/Journal'
 import { System } from './pages/admin/System'
+import { Shares } from './pages/admin/Shares'
 import './styles.css'
 import './admin.css'
 
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')!).render(
 						<Route path="/tableau-de-bord" element={page(<Dashboard />)} />
 						<Route path="/tableau-de-bord/comptes" element={admin(<Users />)} />
 						<Route path="/tableau-de-bord/sessions" element={admin(<Sessions />)} />
+						<Route path="/tableau-de-bord/partages" element={admin(<Shares />)} />
 						<Route path="/tableau-de-bord/journal" element={admin(<Journal />)} />
 						<Route path="/tableau-de-bord/systeme" element={admin(<System />)} />
 						<Route path="/fichiers" element={page(<Files />)} />

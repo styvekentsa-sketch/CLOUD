@@ -15,6 +15,8 @@ export type EventType =
 	| 'user.delete'
 	| 'sessions.revoke'
 	| 'session.revoke'
+	| 'share.create'
+	| 'share.revoke'
 
 export async function logEvent(
 	req: FastifyRequest | null,

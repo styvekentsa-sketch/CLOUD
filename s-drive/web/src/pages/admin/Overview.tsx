@@ -62,8 +62,9 @@ export function Overview() {
 	const events = useData(() => api.events({ limit: 8 }), [], REFRESH_MS)
 	const system = useData(() => api.system(), [], REFRESH_MS)
 	const storage = useData(() => api.storage(), [], REFRESH_MS)
-	const reloadAll = () => { overview.reload(); users.reload(); events.reload(); system.reload(); storage.reload() }
-	const loading = overview.loading || users.loading || events.loading || system.loading || storage.loading
+	const shares = useData(() => api.shareStats(), [], REFRESH_MS)
+	const reloadAll = () => { overview.reload(); users.reload(); events.reload(); system.reload(); storage.reload(); shares.reload() }
+	const loading = overview.loading || users.loading || events.loading || system.loading || storage.loading || shares.loading
 
 	const data = useMemo(() => ({
 		overview: overview.data,
@@ -71,8 +72,9 @@ export function Overview() {
 		events: events.data?.events ?? null,
 		system: system.data,
 		storage: storage.data,
+		shares: shares.data,
 		days,
-	}), [overview.data, users.data, events.data, system.data, storage.data, days])
+	}), [overview.data, users.data, events.data, system.data, storage.data, shares.data, days])
 
 	const changeDays = (d: Days) => {
 		setDays(d)

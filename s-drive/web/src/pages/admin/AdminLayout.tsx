@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AppShell } from '../../components/AppShell'
-import { IconActivity, IconDashboard, IconDevice, IconServer, IconShield, IconUser } from '../../components/Icons'
+import { IconActivity, IconDashboard, IconDevice, IconLink, IconServer, IconShield, IconUser } from '../../components/Icons'
 
 // Navigation de gauche de l'administration (même composant que « Fichiers »)
 const SECTIONS = [
 	{ to: '/tableau-de-bord', label: 'Vue d’ensemble', Icon: IconDashboard, end: true },
 	{ to: '/tableau-de-bord/comptes', label: 'Comptes', Icon: IconUser },
 	{ to: '/tableau-de-bord/sessions', label: 'Sessions', Icon: IconDevice },
+	{ to: '/tableau-de-bord/partages', label: 'Partages', Icon: IconLink },
 	{ to: '/tableau-de-bord/journal', label: 'Journal de sécurité', Icon: IconShield },
 	{ to: '/tableau-de-bord/systeme', label: 'Système', Icon: IconServer },
 ]

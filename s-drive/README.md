@@ -39,6 +39,13 @@ Les applications Fichiers, Photos, Activité, Vidéos, Audio et Application sont
 - Contrôle des envois : `server/src/storage/quota.ts`. `reserveSpace()` réserve l’espace en **une seule requête SQL conditionnelle** (deux envois simultanés ne peuvent pas dépasser le quota), sinon erreur 413 ; `releaseSpace()` libère. `POST /api/me/storage/check` permet de refuser un fichier trop gros **avant** de l’envoyer. La route d’envoi de fichiers (version « Fichiers ») devra appeler `reserveSpace()` avant toute écriture.
 - Un quota réduit sous l’espace déjà utilisé est accepté : les fichiers restent, les nouveaux envois sont refusés.
 
+## Partages publics
+
+- Table `shares` : lien à jeton secret (seule son empreinte SHA-256 est stockée), mot de passe facultatif (scrypt), date d’expiration facultative, compteurs de vues et de téléchargements.
+- Module `server/src/sharing/shares.ts` : `createShare()` et `openShare()` (contrôle révoqué / expiré / mot de passe, puis comptage). La version « Fichiers » s’en servira pour créer et ouvrir les liens.
+- **Console > Partages** : tous les liens (actifs, expirés, révoqués), recherche, filtres, alertes « sans mot de passe » / « sans expiration », bouton **Révoquer** (effet immédiat, inscrit au journal de sécurité ; la trace du partage est conservée).
+- Widget « Partages publics actifs » disponible dans le catalogue de la vue d’ensemble.
+
 ## Sécurité
 
 - Mots de passe hachés avec **scrypt** (sel aléatoire), jamais stockés en clair.

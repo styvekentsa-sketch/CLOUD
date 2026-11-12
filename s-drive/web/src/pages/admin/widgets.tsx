@@ -5,13 +5,13 @@
 // =============================================================================
 import { createContext, useContext, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import type { AdminUser, Overview, SecurityEvent, StorageInfo, SystemInfo, WidgetSize } from '../../api'
+import type { AdminUser, Overview, SecurityEvent, ShareStats, StorageInfo, SystemInfo, WidgetSize } from '../../api'
 import { StorageBar } from '../../components/Storage'
 import { StorageGauge } from '../../components/charts/Gauge'
 import { Avatar } from '../../components/Avatar'
 import { ColumnChart, Heatmap, LineChart, SegmentedBar, Sparkline } from '../../components/charts/Charts'
 import {
-	IconActivity, IconAlert, IconChevronRight, IconClock, IconDevice, IconLogin, IconPie, IconServer, IconShield,
+	IconActivity, IconAlert, IconChevronRight, IconClock, IconDevice, IconLink, IconLogin, IconPie, IconServer, IconShield,
 	IconUser, IconUserPlus,
 } from '../../components/Icons'
 import { Badge } from '../../components/ui'
@@ -25,9 +25,10 @@ export type DashboardData = {
 	events: SecurityEvent[] | null
 	system: SystemInfo | null
 	storage: StorageInfo | null
+	shares: ShareStats | null
 	days: number
 }
-export const DashboardDataContext = createContext<DashboardData>({ overview: null, users: null, events: null, system: null, storage: null, days: 30 })
+export const DashboardDataContext = createContext<DashboardData>({ overview: null, users: null, events: null, system: null, storage: null, shares: null, days: 30 })
 const useDash = () => useContext(DashboardDataContext)
 
 // Couleurs des séries (validées daltonisme + contraste, thème clair et sombre)
@@ -361,6 +362,33 @@ export const WIDGETS: WidgetDef[] = [
 						<dt>API S-Drive</dt>
 						<dd>{bytes(s.process.rss)} · Node {s.app.node.replace(/^v/, '')}</dd>
 					</dl>
+				</div>
+			)
+		},
+	},
+
+	// ---------------------------------------------------------------- Partages
+	{
+		id: 'shares-active', title: 'Partages publics actifs', kind: 'kpi', icon: <IconLink size={18} />,
+		description: 'Nombre de liens publics qui fonctionnent en ce moment, avec ceux sans mot de passe ou sans expiration.',
+		sizes: [3, 4, 6], defaultSize: 3, link: { to: '/tableau-de-bord/partages', label: 'Voir les partages' },
+		Body: () => {
+			const { shares: s } = useDash()
+			if (!s) return <Loading />
+			return (
+				<div className="kpi">
+					<div className="kpi-label">Liens publics qui fonctionnent</div>
+					<div className="kpi-value">{num(s.active)}</div>
+					<div className="kpi-sub">
+						{s.active === 0
+							? <span className="muted">Aucun fichier exposé publiquement</span>
+							: <span className="muted">par {s.owners} personne{s.owners > 1 ? 's' : ''} · {num(s.views)} vue{s.views > 1 ? 's' : ''}</span>}
+					</div>
+					<div className="kpi-flags">
+						{s.unprotected > 0 && <Badge tone="warning">{s.unprotected} sans mot de passe</Badge>}
+						{s.expiringSoon > 0 && <Badge tone="neutral">{s.expiringSoon} expire{s.expiringSoon > 1 ? 'nt' : ''} sous 7 j</Badge>}
+						{s.active > 0 && s.unprotected === 0 && <Badge tone="good">Tous protégés</Badge>}
+					</div>
 				</div>
 			)
 		},

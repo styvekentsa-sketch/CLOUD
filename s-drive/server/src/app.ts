@@ -4,6 +4,7 @@ import { authRoutes } from './routes/auth.js'
 import { adminRoutes } from './routes/admin.js'
 import { insightsRoutes } from './routes/insights.js'
 import { meRoutes } from './routes/me.js'
+import { sharesRoutes } from './routes/shares.js'
 
 export async function buildApp(): Promise<FastifyInstance> {
 	const app = Fastify({
@@ -45,8 +46,12 @@ export async function buildApp(): Promise<FastifyInstance> {
 				return reply.code(403).send({ error: 'bad_origin' })
 			}
 		}
+		// JSON obligatoire dès qu'un corps est envoyé. Une requête SANS corps (ex. DELETE,
+		// souvent envoyé sans Content-Length) n'a rien à analyser : elle passe.
+		const length = req.headers['content-length']
+		const hasBody = (length !== undefined && length !== '0') || req.headers['transfer-encoding'] !== undefined
 		const type = req.headers['content-type'] ?? ''
-		if (req.headers['content-length'] !== '0' && !type.startsWith('application/json')) {
+		if (hasBody && !type.startsWith('application/json')) {
 			return reply.code(415).send({ error: 'json_required' })
 		}
 	})
@@ -72,5 +77,6 @@ export async function buildApp(): Promise<FastifyInstance> {
 	await app.register(adminRoutes)
 	await app.register(insightsRoutes)
 	await app.register(meRoutes)
+	await app.register(sharesRoutes)
 	return app
 }

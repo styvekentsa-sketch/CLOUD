@@ -58,4 +58,6 @@ export const IconChevronLeft = (p: P) => <Icon {...p}><path d="M14.5 6 8.5 12l6 
 export const IconChevronRight = (p: P) => <Icon {...p}><path d="M9.5 6l6 6-6 6" /></Icon>
 export const IconExport = (p: P) => <Icon {...p}><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8" /><path d="M4.5 13.5v5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-5" /></Icon>
 export const IconKey = (p: P) => <Icon {...p}><circle cx="8" cy="15" r="4.5" /><path d="M11.2 11.8 19.5 3.5M16 7l2.5 2.5M14 9l2 2" /></Icon>
-export const IconAlert =(p: P) => <Icon {...p}><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v5.5M12 16.2v.1" /></Icon>
+export const IconLink = (p: P) => <Icon {...p}><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></Icon>
+export const IconFile = (p: P) => <Icon {...p}><path d="M13.5 3.5H7A1.5 1.5 0 0 0 5.5 5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5z" /><path d="M13.5 3.5v5h5" /></Icon>
+export const IconAlert = (p: P) => <Icon {...p}><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v5.5M12 16.2v.1" /></Icon>

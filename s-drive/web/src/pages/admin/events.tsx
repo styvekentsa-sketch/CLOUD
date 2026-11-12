@@ -3,7 +3,7 @@ import type { SecurityEvent } from '../../api'
 import type { Tone } from '../../components/ui'
 import { bytes } from '../../format'
 import {
-	IconAlert, IconEdit, IconLock, IconLogin, IconLogout, IconShield, IconTrash, IconUserPlus, IconX,
+	IconAlert, IconEdit, IconLink, IconLock, IconLogin, IconLogout, IconShield, IconTrash, IconUserPlus, IconX,
 } from '../../components/Icons'
 
 /** Présentation de chaque type d'événement du journal de sécurité. */
@@ -18,6 +18,8 @@ const KINDS: Record<string, { label: string; tone: Tone; icon: (s: number) => Re
 	'user.delete': { label: 'Compte supprimé', tone: 'warning', icon: (s) => <IconTrash size={s} /> },
 	'sessions.revoke': { label: 'Sessions fermées', tone: 'warning', icon: (s) => <IconX size={s} /> },
 	'session.revoke': { label: 'Session fermée', tone: 'warning', icon: (s) => <IconX size={s} /> },
+	'share.create': { label: 'Partage créé', tone: 'info', icon: (s) => <IconLink size={s} /> },
+	'share.revoke': { label: 'Partage révoqué', tone: 'warning', icon: (s) => <IconLink size={s} /> },
 }
 
 export function eventKind(type: string) {
@@ -46,6 +48,11 @@ export function eventSentence(e: SecurityEvent): string {
 		case 'user.delete': return `Compte « ${String(e.meta.username)} » supprimé${actor}`
 		case 'sessions.revoke': return `${e.meta.count ?? 'Les'} session(s) de ${who(e)} fermée(s)${actor}`
 		case 'session.revoke': return `Une session de ${who(e)} fermée${actor}`
+		case 'share.create': return `${who(e)} a partagé « ${String(e.meta.itemName ?? '?')} » par lien public`
+		case 'share.revoke': {
+			const stats = typeof e.meta.views === 'number' ? ` (${e.meta.views} vue${Number(e.meta.views) > 1 ? 's' : ''}, ${e.meta.downloads ?? 0} téléchargement${Number(e.meta.downloads) > 1 ? 's' : ''})` : ''
+			return `Lien public vers « ${String(e.meta.itemName ?? '?')} » de ${who(e)} révoqué${actor}${stats}`
+		}
 		case 'user.update': {
 			const c = (e.meta.changes ?? {}) as Record<string, string>
 			const quota = 'storageQuota' in c
