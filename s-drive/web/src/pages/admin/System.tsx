@@ -4,6 +4,7 @@ import { IconRefresh } from '../../components/Icons'
 import { Badge, useData, type Tone } from '../../components/ui'
 import { bytes, dateTime, duration, num } from '../../format'
 import { AdminLayout, PageHeader } from './AdminLayout'
+import { StorageMaintenance } from './Maintenance'
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
 	return (
@@ -50,10 +51,12 @@ export function System() {
 
 	return (
 		<AdminLayout>
-			<PageHeader title="Système" subtitle="État du serveur S-Drive, de la base de données et réglages actifs."
+			<PageHeader title="Système" subtitle="Maintenance du stockage, état du serveur, de la base de données et réglages actifs."
 				actions={<button type="button" className="btn btn-ghost" onClick={reload} disabled={loading}>
 					<IconRefresh size={18} className={loading ? 'spin' : undefined} /> Actualiser
 				</button>} />
+			<StorageMaintenance />
+			<h2 className="maint-title">État du serveur</h2>
 			{!s ? <p className="muted">Chargement…</p> : (
 				<div className="sys-grid">
 					<Card title="Application">

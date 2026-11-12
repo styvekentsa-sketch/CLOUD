@@ -99,6 +99,29 @@ const migrations: string[] = [
 	CREATE INDEX shares_active_idx ON shares (revoked_at, expires_at);
 	CREATE INDEX shares_created_idx ON shares (created_at DESC);
 	`,
+
+	// 5 — fichiers et dossiers (métadonnées). Le contenu d'un fichier est stocké sur le
+	// disque dans <STORAGE_DIR>/blobs/<owner_id>/<storage_key>. Corbeille = trashed_at.
+	// L'espace d'un fichier compte dans le quota tant qu'il n'est pas définitivement supprimé.
+	`
+	CREATE TABLE files (
+		id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+		owner_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		parent_id    uuid REFERENCES files(id) ON DELETE CASCADE,
+		kind         text NOT NULL CHECK (kind IN ('file', 'folder')),
+		name         text NOT NULL,
+		size         bigint NOT NULL DEFAULT 0 CHECK (size >= 0),
+		mime         text,
+		storage_key  text UNIQUE,
+		created_at   timestamptz NOT NULL DEFAULT now(),
+		updated_at   timestamptz NOT NULL DEFAULT now(),
+		trashed_at   timestamptz,
+		CHECK ((kind = 'file') = (storage_key IS NOT NULL))
+	);
+	CREATE INDEX files_owner_idx ON files (owner_id);
+	CREATE INDEX files_parent_idx ON files (parent_id);
+	CREATE INDEX files_trashed_idx ON files (trashed_at) WHERE trashed_at IS NOT NULL;
+	`,
 ]
 
 export async function migrate(): Promise<void> {

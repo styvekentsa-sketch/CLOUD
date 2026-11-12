@@ -3,7 +3,7 @@ import type { SecurityEvent } from '../../api'
 import type { Tone } from '../../components/ui'
 import { bytes } from '../../format'
 import {
-	IconAlert, IconEdit, IconLink, IconLock, IconLogin, IconLogout, IconShield, IconTrash, IconUserPlus, IconX,
+	IconAlert, IconEdit, IconLink, IconLock, IconLogin, IconLogout, IconServer, IconShield, IconTrash, IconUserPlus, IconX,
 } from '../../components/Icons'
 
 /** Présentation de chaque type d'événement du journal de sécurité. */
@@ -20,6 +20,9 @@ const KINDS: Record<string, { label: string; tone: Tone; icon: (s: number) => Re
 	'session.revoke': { label: 'Session fermée', tone: 'warning', icon: (s) => <IconX size={s} /> },
 	'share.create': { label: 'Partage créé', tone: 'info', icon: (s) => <IconLink size={s} /> },
 	'share.revoke': { label: 'Partage révoqué', tone: 'warning', icon: (s) => <IconLink size={s} /> },
+	'maintenance.trash_purge': { label: 'Maintenance — corbeilles vidées', tone: 'warning', icon: (s) => <IconTrash size={s} /> },
+	'maintenance.orphan_scan': { label: 'Maintenance — analyse des orphelins', tone: 'info', icon: (s) => <IconServer size={s} /> },
+	'maintenance.orphan_clean': { label: 'Maintenance — orphelins nettoyés', tone: 'warning', icon: (s) => <IconServer size={s} /> },
 }
 
 export function eventKind(type: string) {
@@ -49,6 +52,18 @@ export function eventSentence(e: SecurityEvent): string {
 		case 'sessions.revoke': return `${e.meta.count ?? 'Les'} session(s) de ${who(e)} fermée(s)${actor}`
 		case 'session.revoke': return `Une session de ${who(e)} fermée${actor}`
 		case 'share.create': return `${who(e)} a partagé « ${String(e.meta.itemName ?? '?')} » par lien public`
+		case 'maintenance.trash_purge': {
+			const m = e.meta as Record<string, number>
+			return `Corbeilles vidées (éléments de plus de ${m.olderThanDays ?? 30} j) : ${m.files ?? 0} fichier(s) supprimé(s), ${bytes(m.bytes ?? 0)} libérés${actor}`
+		}
+		case 'maintenance.orphan_scan': {
+			const m = e.meta as Record<string, number>
+			return `Analyse du stockage : ${m.orphanFiles ?? 0} orphelin(s) sur le disque, ${m.missingFiles ?? 0} entrée(s) sans fichier, ${m.staleTempFiles ?? 0} envoi(s) abandonné(s)${actor}`
+		}
+		case 'maintenance.orphan_clean': {
+			const m = e.meta as Record<string, number>
+			return `Nettoyage du stockage : ${(m.orphanFiles ?? 0) + (m.tempFiles ?? 0)} fichier(s) supprimé(s) (${bytes((m.orphanBytes ?? 0) + (m.tempBytes ?? 0))}), ${m.missingRemoved ?? 0} entrée(s) retirée(s)${actor}`
+		}
 		case 'share.revoke': {
 			const stats = typeof e.meta.views === 'number' ? ` (${e.meta.views} vue${Number(e.meta.views) > 1 ? 's' : ''}, ${e.meta.downloads ?? 0} téléchargement${Number(e.meta.downloads) > 1 ? 's' : ''})` : ''
 			return `Lien public vers « ${String(e.meta.itemName ?? '?')} » de ${who(e)} révoqué${actor}${stats}`

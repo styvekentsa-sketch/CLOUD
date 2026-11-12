@@ -7,7 +7,7 @@ import { ago, dateTime, device } from '../../format'
 import { AdminLayout, PageHeader } from './AdminLayout'
 import { eventKind, eventSentence } from './events'
 
-type Group = '' | 'auth' | 'failures' | 'accounts' | 'sessions' | 'shares'
+type Group = '' | 'auth' | 'failures' | 'accounts' | 'sessions' | 'shares' | 'maintenance'
 
 /** Export CSV de ce qui est affiché (séparateur « ; » pour Excel en français). */
 function exportCsv(events: SecurityEvent[]) {
@@ -83,6 +83,7 @@ export function Journal() {
 						{ value: 'accounts', label: 'Comptes' },
 						{ value: 'sessions', label: 'Sessions' },
 						{ value: 'shares', label: 'Partages' },
+						{ value: 'maintenance', label: 'Maintenance' },
 					]} />
 				<label className="search">
 					<IconSearch size={18} />

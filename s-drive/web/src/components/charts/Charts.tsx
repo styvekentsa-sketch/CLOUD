@@ -301,13 +301,17 @@ export function Sparkline({ values, height = 36 }: { values: number[]; height?: 
 // ---------------------------------------------------------------------------------
 // Barre segmentée fine (répartition d'un tout)
 // ---------------------------------------------------------------------------------
-export function SegmentedBar({ parts }: { parts: { label: string; value: number; color: string }[] }) {
+export function SegmentedBar({ parts, format = String }: {
+	parts: { label: string; value: number; color: string }[]
+	/** Mise en forme des valeurs (ex. tailles en Mo) ; par défaut, le nombre brut */
+	format?: (n: number) => string
+}) {
 	const total = parts.reduce((s, p) => s + p.value, 0)
 	return (
 		<div className="segbar-wrap">
 			<div className="segbar" role="img" aria-label={parts.map((p) => `${p.label} : ${p.value}`).join(', ')}>
 				{parts.filter((p) => p.value > 0).map((p) => (
-					<span key={p.label} style={{ flexGrow: p.value, background: p.color }} title={`${p.label} : ${p.value}`} />
+					<span key={p.label} style={{ flexGrow: p.value, background: p.color }} title={`${p.label} : ${format(p.value)}`} />
 				))}
 				{total === 0 && <span style={{ flexGrow: 1 }} className="segbar-empty" />}
 			</div>
@@ -316,7 +320,7 @@ export function SegmentedBar({ parts }: { parts: { label: string; value: number;
 					<li key={p.label}>
 						<span className="viz-key-rect" style={{ background: p.color }} />
 						<span>{p.label}</span>
-						<strong>{p.value}</strong>
+						<strong>{format(p.value)}</strong>
 						<span className="muted">{total ? Math.round((p.value / total) * 100) : 0} %</span>
 					</li>
 				))}

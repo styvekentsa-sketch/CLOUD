@@ -17,6 +17,9 @@ export type EventType =
 	| 'session.revoke'
 	| 'share.create'
 	| 'share.revoke'
+	| 'maintenance.trash_purge'
+	| 'maintenance.orphan_scan'
+	| 'maintenance.orphan_clean'
 
 export async function logEvent(
 	req: FastifyRequest | null,

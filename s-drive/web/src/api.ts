@@ -98,6 +98,10 @@ export const api = {
 	shares: (filters: Record<string, string> = {}) => request<{ shares: Share[] }>('GET', `/api/admin/shares${qs(filters)}`),
 	shareStats: () => request<ShareStats>('GET', '/api/admin/shares/stats'),
 	revokeShare: (id: string) => request<{ ok: true }>('DELETE', `/api/admin/shares/${encodeURIComponent(id)}`),
+	maintenance: () => request<MaintenanceInfo>('GET', '/api/admin/maintenance/storage'),
+	purgeTrash: () => request<PurgeResult>('POST', '/api/admin/maintenance/trash/purge', { olderThanDays: 30 }),
+	scanOrphans: () => request<ScanResult>('POST', '/api/admin/maintenance/orphans/scan', {}),
+	cleanOrphans: (removeMissing: boolean) => request<CleanResult>('POST', '/api/admin/maintenance/orphans/clean', { removeMissing }),
 	preferences: () => request<{ preferences: Preferences }>('GET', '/api/me/preferences'),
 	savePreferences: (p: Preferences) => request<{ preferences: Preferences }>('PUT', '/api/me/preferences', p),
 }
@@ -219,4 +223,45 @@ export type ShareStats = {
 	views: number
 	downloads: number
 	owners: number
+}
+
+export type PurgePreview = { olderThanDays: number; items: number; files: number; bytes: number; owners: number }
+export type PurgeResult = PurgePreview & { unlinkFailed: number }
+export type ScanSummary = {
+	orphanFiles: number
+	orphanBytes: number
+	missingFiles: number
+	missingBytes: number
+	staleTempFiles: number
+	staleTempBytes: number
+	diskFiles: number
+	dbFiles: number
+	storageLooksMissing: boolean
+}
+export type ScanResult = ScanSummary & {
+	orphans: { owner: string | null; key: string; size: number; modifiedAt: string }[]
+	missing: { owner: string | null; key: string; size: number }[]
+	staleTemp: { name: string; size: number; modifiedAt: string }[]
+}
+export type CleanResult = {
+	orphanFiles: number
+	orphanBytes: number
+	tempFiles: number
+	tempBytes: number
+	missingRemoved: number
+	missingBytes: number
+	missingFound: number
+	skippedMissing: boolean
+}
+type Stamp = { at: string; actor: string | null }
+export type MaintenanceInfo = {
+	active: { bytes: number; files: number; folders: number }
+	trash: { bytes: number; files: number; owners: number }
+	temp: { bytes: number; files: number; staleBytes: number; staleFiles: number }
+	purge: PurgePreview
+	disk: { total: number; free: number; used: number } | null
+	running: string | null
+	lastScan: (Stamp & ScanSummary) | null
+	lastClean: (Stamp & CleanResult) | null
+	lastPurge: (Stamp & PurgeResult) | null
 }

@@ -46,6 +46,15 @@ Les applications Fichiers, Photos, Activité, Vidéos, Audio et Application sont
 - **Console > Partages** : tous les liens (actifs, expirés, révoqués), recherche, filtres, alertes « sans mot de passe » / « sans expiration », bouton **Révoquer** (effet immédiat, inscrit au journal de sécurité ; la trace du partage est conservée).
 - Widget « Partages publics actifs » disponible dans le catalogue de la vue d’ensemble.
 
+## Maintenance du stockage (Console > Système)
+
+- Organisation sur le disque : `STORAGE_PATH/blobs/<id du compte>/<clé>` (contenu des fichiers) et `STORAGE_PATH/tmp/` (envois en cours). Métadonnées dans la table `files` (corbeille = `trashed_at`). Un fichier à la corbeille compte dans le quota jusqu’à sa suppression définitive.
+- **Répartition** : fichiers actifs, corbeilles (contenu des dossiers jetés inclus), temporaires et orphelins.
+- **Vider les corbeilles de plus de 30 jours** : aperçu de l’espace libéré avant confirmation, suppression des entrées puis des contenus, quota des propriétaires libéré.
+- **Analyser et nettoyer les orphelins** : fichiers sur le disque sans entrée, entrées sans fichier (retrait facultatif), envois abandonnés depuis plus de 24 h.
+- Garde-fous : rien de récent (moins d’1 h) n’est touché, aucun lien symbolique suivi, aucune suppression hors du dossier de stockage, une seule opération à la fois, refus de retirer des entrées si la plupart des fichiers sont introuvables (disque non monté).
+- Chaque action (vidage, analyse, nettoyage) est inscrite au journal de sécurité (filtre « Maintenance »).
+
 ## Sécurité
 
 - Mots de passe hachés avec **scrypt** (sel aléatoire), jamais stockés en clair.
